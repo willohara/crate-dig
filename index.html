@@ -640,6 +640,24 @@ function spotifyWebSearchUrl(artist, title) {
   return `https://open.spotify.com/search/${q}`;
 }
 
+function openSpotifySearch(artist, title, e) {
+  if (e) e.preventDefault();
+  const q = encodeURIComponent(`${artist} ${title}`.trim());
+  const appUri = `spotify:search:${q}`;
+  const webUrl = `https://open.spotify.com/search/${q}`;
+  const start = Date.now();
+  let didBlur = false;
+  const onBlur = () => { didBlur = true; };
+  window.addEventListener("blur", onBlur);
+  window.location.href = appUri;
+  setTimeout(() => {
+    window.removeEventListener("blur", onBlur);
+    if (!didBlur && Date.now() - start < 2000) {
+      window.open(webUrl, "_blank");
+    }
+  }, 800);
+}
+
 function appleMusicSearchUrl(artist, title) {
   const q = encodeURIComponent(`${artist} ${title}`.trim());
   return `https://music.apple.com/us/search?term=${q}`;
@@ -1146,8 +1164,7 @@ function App() {
                   </div>
                 </div>
                 <div className="release-actions" onClick={e => e.stopPropagation()}>
-                  <a className="spotify-link" href={spotifySearchUrl(artist, title)} title="Open in Spotify app">♫ Spotify</a>
-                  <a className="spotify-link" href={spotifyWebSearchUrl(artist, title)} target="_blank" rel="noopener" style={{opacity:0.5}} title="Open in Spotify web player">↗</a>
+                  <a className="spotify-link" href="#" onClick={(e) => openSpotifySearch(artist, title, e)} title="Opens app if installed, otherwise web player">♫ Spotify ↗</a>
                   <a className="apple-link" href={appleMusicSearchUrl(artist, title)} target="_blank" rel="noopener">♫ Apple Music ↗</a>
                   <a className="ytmusic-link" href={ytMusicSearchUrl(artist, title)} target="_blank" rel="noopener">♬ YT Music ↗</a>
                   <a className="yt-link" href={ytSearchUrl(artist, title)} target="_blank" rel="noopener">▶ YouTube ↗</a>
@@ -1307,7 +1324,7 @@ function App() {
                       <div key={id} className="unmatched-item">
                         <span>{artist ? <><strong style={{color:'var(--cream)'}}>{artist}</strong> — {title}</> : release.title}</span>
                         <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap'}}>
-                          <a className="spotify-link" href={spotifySearchUrl(artist, title)} title="Open in Spotify app">♫ Spotify</a>
+                          <a className="spotify-link" href="#" onClick={(e) => openSpotifySearch(artist, title, e)} title="Opens app if installed, otherwise web player">♫ Spotify ↗</a>
                           <a className="apple-link" href={appleMusicSearchUrl(artist, title)} target="_blank" rel="noopener">Apple Music ↗</a>
                           <a className="ytmusic-link" href={ytMusicSearchUrl(artist, title)} target="_blank" rel="noopener">YT Music ↗</a>
                           <a className="yt-link" href={ytSearchUrl(artist, title)} target="_blank" rel="noopener">YouTube ↗</a>
