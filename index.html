@@ -619,6 +619,111 @@ const GENRES = [
   "Blues", "Stage & Screen", "Brass & Military"
 ];
 
+const GENRE_STYLES = {
+  "Rock": [
+    "Acid Rock","Acoustic","Alternative Rock","AOR","Art Rock","Avantgarde",
+    "Beat","Black Metal","Blues Rock","Brit Pop","Classic Rock","Coldwave",
+    "Country Rock","Crust","Death Metal","Deathcore","Deathrock",
+    "Doom Metal","Dream Pop","Drone","Emo","Ethereal","Experimental",
+    "Folk Metal","Folk Rock","Funeral Doom Metal","Funk Metal","Garage Rock",
+    "Glam","Goth Rock","Gothic Metal","Grindcore","Grunge",
+    "Hard Rock","Hardcore","Heavy Metal","Indie Pop",
+    "Indie Rock","Industrial","Krautrock","Lo-Fi","Math Rock",
+    "Metalcore","Mod","Neo-Psychedelia","Neofolk","New Wave","No Wave",
+    "Noise","Nu Metal","Oi","Pop Punk","Pop Rock","Post Metal","Post Punk",
+    "Post Rock","Post-Hardcore","Power Metal","Power Pop","Prog Rock",
+    "Progressive Metal","Psychedelic Rock","Psychobilly","Pub Rock",
+    "Punk","Rock & Roll","Rockabilly","Shoegaze","Ska Punk","Sludge Metal",
+    "Soft Rock","Southern Rock","Space Rock","Speed Metal","Stoner Rock",
+    "Surf","Symphonic Rock","Synth-pop","Technical Death Metal",
+    "Thrash","Viking Metal"
+  ],
+  "Electronic": [
+    "Abstract","Acid","Acid House","Acid Jazz","Acid Trance","Ambient",
+    "Baltimore Club","Bass Music","Bassline","Beatdown","Berlin-School",
+    "Big Beat","Bitpop","Breakbeat","Breakcore","Breaks","Broken Beat",
+    "Chillwave","Chiptune","Coldwave","Crunk","Dark Ambient","Dark Electro",
+    "Darkstep","Deep House","Deep Techno","Detroit Techno","Digital Hardcore",
+    "Disco","DJ Battle Tool","Donk","Downtempo","Drill and Bass","Drone",
+    "Drum n Bass","Dub","Dub Techno","Dubstep","Dungeon Synth",
+    "EBM","Electro","Electro House","Electroclash","Euro House","Euro-Disco",
+    "Eurodance","Experimental","Footwork","Freestyle","Future Jazz",
+    "Gabber","Garage House","Ghetto","Ghetto House","Glitch","Goa Trance",
+    "Grime","Halftime","Happy Hardcore","Hard House","Hard Techno",
+    "Hard Trance","Hardstyle","Hardcore","Hi NRG","Hip-House","House",
+    "IDM","Illbient","Industrial","Italo House","Italo-Disco","Italodance",
+    "Juke","Jump Up","Jumpstyle","Jungle","Latin","Leftfield",
+    "Liquid Funk","Lo-Fi","Makina","Minimal","Minimal Techno","Moombahton",
+    "Musique Concrete","Neofolk","Neurofunk","New Age","New Beat","New Wave",
+    "Noise","Nu-Disco","Progressive House","Progressive Trance",
+    "Psy-Trance","Rhythmic Noise","Schranz","Sound Collage","Speed Garage",
+    "Speedcore","Synth-pop","Tech House","Tech Trance","Techno",
+    "Trance","Tribal","Tribal House","Trip Hop","Tropical House",
+    "UK Funky","UK Garage","Vaporwave","Witch House","Wonky"
+  ],
+  "Jazz": [
+    "Afro-Cuban Jazz","Avant-garde Jazz","Bebop","Big Band","Bop",
+    "Bossa Nova","Contemporary Jazz","Cool Jazz","Dixieland",
+    "Easy Listening","Free Improvisation","Free Jazz","Fusion",
+    "Gypsy Jazz","Hard Bop","Jazz-Funk","Jazz-Rock","Latin Jazz",
+    "Modal","Post Bop","Ragtime","Smooth Jazz","Soul-Jazz","Swing"
+  ],
+  "Funk / Soul": [
+    "Afrobeat","Bayou Funk","Boogie","Contemporary R&B","Disco",
+    "Free Funk","Funk","Gospel","Modern Soul","Neo Soul",
+    "New Jack Swing","Northern Soul","P.Funk","Psychedelic",
+    "Rhythm & Blues","RnB/Swing","Soul","Swingbeat"
+  ],
+  "Hip Hop": [
+    "Bass Music","Boom Bap","Bounce","Conscious","Crunk",
+    "Cut-up/DJ","Electro","G-Funk","Gangsta","Grime",
+    "Hardcore Hip-Hop","Horrorcore","Instrumental","Jazz-Rap",
+    "Jazzy Hip-Hop","Miami Bass","Nerdcore","New School","Old School",
+    "Pop Rap","Ragga HipHop","RnB/Swing","Screw","Thug Rap",
+    "Trap","Trip Hop","Turntablism"
+  ],
+  "Classical": [
+    "Baroque","Choral","Classical","Contemporary","Early",
+    "Impressionist","Medieval","Modern","Neo-Classical",
+    "Neo-Romantic","Opera","Post-Modern","Renaissance","Romantic"
+  ],
+  "Pop": [
+    "Ballad","Bollywood","Bubblegum","Chanson","City Pop",
+    "Dance-pop","Disco","Europop","Indie Pop","J-pop","K-pop",
+    "Kayokyoku","Light Music","Music Hall","Novelty","Parody",
+    "Power Pop","Schlager","Sunshine Pop","Synth-pop","Teen Pop","Vocal"
+  ],
+  "Folk, World, & Country": [
+    "African","Bluegrass","Cajun","Celtic","Country","Fado",
+    "Field Recording","Flamenco","Folk","Folk Rock","Highlife",
+    "Hindustani","Honky Tonk","Indian Classical","Klezmer","Laika",
+    "Mbalax","Merengue","Nordic","Pacific","Polka","Rockabilly",
+    "Samba","Soca","Son","Soukous","Tex-Mex","Traditional","Zydeco"
+  ],
+  "Reggae": [
+    "Calypso","Dancehall","Dub","Lovers Rock","Ragga",
+    "Reggae","Reggae-Pop","Rocksteady","Roots Reggae","Ska","Soca"
+  ],
+  "Latin": [
+    "Boogaloo","Bolero","Bossa Nova","Cha-Cha","Charanga",
+    "Cumbia","Descarga","Fado","Flamenco","Guajira","Guaracha",
+    "Latin Jazz","Mambo","Mariachi","Merengue","MPB","Pachanga",
+    "Plena","Ranchera","Reggaeton","Rumba","Salsa","Samba","Son",
+    "Tango","Tejano","Trova","Vallenato"
+  ],
+  "Blues": [
+    "Chicago Blues","Country Blues","Delta Blues","East Coast Blues",
+    "Electric Blues","Harmonica Blues","Jump Blues","Louisiana Blues",
+    "Modern Electric Blues","Piano Blues","Piedmont Blues","Texas Blues"
+  ],
+  "Stage & Screen": [
+    "Musical","Score","Soundtrack","Theme"
+  ],
+  "Brass & Military": [
+    "Brass Band","Marches","Military","Pipe & Drum"
+  ]
+};
+
 const delay = ms => new Promise(r => setTimeout(r, ms));
 
 // Parse "Artist - Title" from Discogs title
