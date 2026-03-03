@@ -731,7 +731,10 @@ function parseTitle(t) {
   if (!t) return { artist: "", title: t || "" };
   const idx = t.indexOf(" - ");
   if (idx === -1) return { artist: "", title: t };
-  return { artist: t.slice(0, idx).trim(), title: t.slice(idx + 3).trim() };
+  let artist = t.slice(0, idx).trim();
+  // Strip Discogs disambiguation numbers like (2), (3), etc.
+  artist = artist.replace(/\s*\(\d+\)\s*$/, "");
+  return { artist, title: t.slice(idx + 3).trim() };
 }
 
 function ytSearchUrl(artist, title) {
