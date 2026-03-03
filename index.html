@@ -457,6 +457,30 @@
     white-space: nowrap;
   }
   .spotify-link:hover { background: #15823b; color: #fff; }
+  .apple-link {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: #fc3c44;
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #5a1520;
+    border-radius: 3px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .apple-link:hover { background: #5a1520; color: #fff; }
+  .ytmusic-link {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    color: #ff0000;
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid #551111;
+    border-radius: 3px;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .ytmusic-link:hover { background: #551111; color: #fff; }
   .discogs-link {
     font-family: var(--font-mono);
     font-size: 0.68rem;
@@ -609,7 +633,21 @@ function ytSearchUrl(artist, title) {
 
 function spotifySearchUrl(artist, title) {
   const q = encodeURIComponent(`${artist} ${title}`.trim());
+  return `spotify:search:${q}`;
+}
+function spotifyWebSearchUrl(artist, title) {
+  const q = encodeURIComponent(`${artist} ${title}`.trim());
   return `https://open.spotify.com/search/${q}`;
+}
+
+function appleMusicSearchUrl(artist, title) {
+  const q = encodeURIComponent(`${artist} ${title}`.trim());
+  return `https://music.apple.com/us/search?term=${q}`;
+}
+
+function ytMusicSearchUrl(artist, title) {
+  const q = encodeURIComponent(`${artist} ${title}`.trim());
+  return `https://music.youtube.com/search?q=${q}`;
 }
 
 function discogsUrl(uri) {
@@ -741,7 +779,7 @@ function App() {
     setPage(p);
     try {
       const url = new URL(DISCOGS_API);
-      url.searchParams.set("token", discogsToken);
+      if (discogsToken) url.searchParams.set("token", discogsToken);
       url.searchParams.set("type", "release");
       url.searchParams.set("per_page", "20");
       url.searchParams.set("page", String(p));
@@ -954,7 +992,7 @@ function App() {
         <div className="header-row">
           <h1>Crate Dig <span>discogs → spotify</span></h1>
           <div className="auth-status">
-            {discogsToken && <span className="badge badge-ok">DISCOGS ✓</span>}
+            {discogsToken ? <span className="badge badge-ok">DISCOGS ✓</span> : <span className="badge badge-off">DISCOGS (no token)</span>}
             {spotifyUser ? (
               <span className="badge badge-spotify">SPOTIFY: {spotifyUser.display_name}</span>
             ) : spotifyToken ? (
@@ -975,15 +1013,15 @@ function App() {
           <h2>API Setup</h2>
           <div className="setup-grid">
             <div className="setup-group">
-              <label>Discogs Personal Token</label>
+              <label>Discogs Token (optional)</label>
               <input
                 type="password"
                 value={discogsToken}
                 onChange={e => setDiscogsToken(e.target.value)}
-                placeholder="paste token here…"
+                placeholder="optional — increases rate limit…"
               />
               <div className="hint">
-                Get one at <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noopener" style={{color:'var(--amber-dim)'}}>discogs.com/settings/developers</a>
+                Works without a token (25 req/min). Add one for 60 req/min from <a href="https://www.discogs.com/settings/developers" target="_blank" rel="noopener" style={{color:'var(--amber-dim)'}}>discogs.com/settings/developers</a>
               </div>
             </div>
             <div className="setup-group">
@@ -1004,7 +1042,7 @@ function App() {
               )}
             </div>
           </div>
-          {discogsToken && (spotifyUser || spotifyToken) && (
+          {(spotifyUser || spotifyToken) && (
             <div className="setup-actions">
               <button className="btn btn-primary" onClick={() => setShowSetup(false)}>
                 Ready — start digging
@@ -1108,7 +1146,10 @@ function App() {
                   </div>
                 </div>
                 <div className="release-actions" onClick={e => e.stopPropagation()}>
-                  <a className="spotify-link" href={spotifySearchUrl(artist, title)} target="_blank" rel="noopener">♫ Spotify ↗</a>
+                  <a className="spotify-link" href={spotifySearchUrl(artist, title)} title="Open in Spotify app">♫ Spotify</a>
+                  <a className="spotify-link" href={spotifyWebSearchUrl(artist, title)} target="_blank" rel="noopener" style={{opacity:0.5}} title="Open in Spotify web player">↗</a>
+                  <a className="apple-link" href={appleMusicSearchUrl(artist, title)} target="_blank" rel="noopener">♫ Apple Music ↗</a>
+                  <a className="ytmusic-link" href={ytMusicSearchUrl(artist, title)} target="_blank" rel="noopener">♬ YT Music ↗</a>
                   <a className="yt-link" href={ytSearchUrl(artist, title)} target="_blank" rel="noopener">▶ YouTube ↗</a>
                   {r.uri && (
                     <a className="discogs-link" href={discogsUrl(r.uri)} target="_blank" rel="noopener">Discogs ↗</a>
@@ -1265,7 +1306,10 @@ function App() {
                     return (
                       <div key={id} className="unmatched-item">
                         <span>{artist ? <><strong style={{color:'var(--cream)'}}>{artist}</strong> — {title}</> : release.title}</span>
-                        <div style={{display:'flex',gap:'0.4rem'}}>
+                        <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap'}}>
+                          <a className="spotify-link" href={spotifySearchUrl(artist, title)} title="Open in Spotify app">♫ Spotify</a>
+                          <a className="apple-link" href={appleMusicSearchUrl(artist, title)} target="_blank" rel="noopener">Apple Music ↗</a>
+                          <a className="ytmusic-link" href={ytMusicSearchUrl(artist, title)} target="_blank" rel="noopener">YT Music ↗</a>
                           <a className="yt-link" href={ytSearchUrl(artist, title)} target="_blank" rel="noopener">YouTube ↗</a>
                           {release.uri && <a className="discogs-link" href={discogsUrl(release.uri)} target="_blank" rel="noopener">Discogs ↗</a>}
                         </div>
