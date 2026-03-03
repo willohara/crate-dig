@@ -983,15 +983,17 @@ function App() {
       }
 
       const { artist, title } = parseTitle(release.title);
+      const releaseYear = release.year ? String(release.year) : "";
       let q = "";
       if (artist && title) {
         q = `artist:${artist} album:${title}`;
       } else {
         q = release.title;
       }
+      if (releaseYear) q += ` year:${releaseYear}`;
 
       try {
-        const url = `${SPOTIFY_API}/search?type=album&limit=3&q=${encodeURIComponent(q)}`;
+        const url = `${SPOTIFY_API}/search?type=album&limit=5&q=${encodeURIComponent(q)}`;
         const res = await fetch(url, { headers: { Authorization: `Bearer ${spotifyToken}` } });
         if (res.status === 401) {
           setSpotifyToken(null);
@@ -1006,7 +1008,19 @@ function App() {
         }
         if (!res.ok) throw new Error("Spotify search failed");
         const data = await res.json();
-        const albums = data.albums?.items || [];
+        let albums = data.albums?.items || [];
+
+        // If no results with year, try without
+        if (albums.length === 0 && releaseYear) {
+          const q2 = artist && title ? `artist:${artist} album:${title}` : release.title;
+          const url2 = `${SPOTIFY_API}/search?type=album&limit=5&q=${encodeURIComponent(q2)}`;
+          const res2 = await fetch(url2, { headers: { Authorization: `Bearer ${spotifyToken}` } });
+          if (res2.ok) {
+            const data2 = await res2.json();
+            albums = data2.albums?.items || [];
+          }
+          await delay(80);
+        }
 
         if (albums.length > 0) {
           const best = albums[0];
@@ -1018,21 +1032,7 @@ function App() {
             albumId: best.id
           };
         } else {
-          // Try a looser search without field qualifiers
-          const url2 = `${SPOTIFY_API}/search?type=album&limit=3&q=${encodeURIComponent(release.title)}`;
-          const res2 = await fetch(url2, { headers: { Authorization: `Bearer ${spotifyToken}` } });
-          const data2 = await res2.json();
-          const albums2 = data2.albums?.items || [];
-          if (albums2.length > 0) {
-            const best = albums2[0];
-            newMatches[id] = {
-              uri: best.uri, name: best.name,
-              artist: best.artists?.map(a => a.name).join(", ") || "",
-              url: best.external_urls?.spotify || "", albumId: best.id
-            };
-          } else {
-            newMatches[id] = null;
-          }
+          newMatches[id] = null;
         }
       } catch (e) {
         newMatches[id] = null;
