@@ -903,14 +903,13 @@ function App() {
 
   // ─── Discogs Search ───
   const searchDiscogs = async (p = 1) => {
-    if (!discogsToken) { setError("Enter your Discogs token above"); return; }
     setLoading(true);
     setError("");
     setPage(p);
     try {
       const url = new URL(DISCOGS_API);
       if (discogsToken) url.searchParams.set("token", discogsToken);
-      url.searchParams.set("type", "release");
+      url.searchParams.set("type", "master");
       url.searchParams.set("per_page", "20");
       url.searchParams.set("page", String(p));
       if (year) url.searchParams.set("year", year);
