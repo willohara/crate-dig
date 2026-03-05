@@ -7,105 +7,134 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Courier+Prime:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0e0d0b;
-    --surface: #1a1814;
-    --surface2: #242019;
-    --border: #33302a;
-    --border-light: #44403a;
-    --amber: #d4a043;
-    --amber-dim: #a67c32;
-    --amber-glow: #e8b44d;
-    --cream: #e8dcc8;
-    --cream-dim: #b0a690;
-    --red: #c45c4a;
-    --green: #5a9a6a;
-    --green-dim: #3d6b4a;
+    --bg: #1e1a14;
+    --surface: #28231a;
+    --surface2: #302a1f;
+    --cardboard: #a8894a;
+    --cardboard-dark: #7a6332;
+    --cardboard-light: #c4a45a;
+    --paper: #d8ccb0;
+    --paper-dim: #8a7e68;
+    --ink: #1e1a14;
+    --red: #b83a2e;
+    --green-dim: #4a6a3a;
     --spotify-green: #1db954;
     --youtube-red: #ff0033;
-    --font-display: 'DM Serif Display', Georgia, serif;
-    --font-body: 'DM Sans', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --border: #3a3228;
+    --border-light: #4a4030;
+    --stain1: rgba(90, 70, 30, 0.08);
+    --stain2: rgba(60, 40, 20, 0.06);
+    --font-header: 'Oswald', Impact, sans-serif;
+    --font-typed: 'Courier Prime', 'Courier New', monospace;
+    --font-scrawl: 'Special Elite', serif;
+    --font-display: 'Oswald', Impact, sans-serif;
+    --font-body: 'Courier Prime', 'Courier New', monospace;
+    --font-mono: 'Courier Prime', 'Courier New', monospace;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     background: var(--bg);
-    color: var(--cream);
-    font-family: var(--font-body);
-    font-weight: 300;
+    color: var(--paper);
+    font-family: var(--font-typed);
+    font-size: 12.5px;
     min-height: 100vh;
     position: relative;
     overflow-x: hidden;
   }
-
-  /* Grain overlay */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
-    opacity: 0.035;
     pointer-events: none;
     z-index: 9999;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.09;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    background:
+      radial-gradient(ellipse at 20% 50%, var(--stain1) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 30%, var(--stain2) 0%, transparent 40%),
+      radial-gradient(ellipse at 50% 90%, var(--stain1) 0%, transparent 45%);
   }
 
   /* ─── Header ─── */
   .header {
-    padding: 2rem 2rem 1rem;
-    border-bottom: 1px solid var(--border);
+    padding: 1.5rem 2rem 1rem;
+    border-bottom: 3px solid var(--border);
     position: relative;
   }
   .header::after {
     content: '';
     position: absolute;
-    bottom: -1px;
-    left: 2rem;
-    width: 120px;
-    height: 2px;
-    background: var(--amber);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--cardboard-dark) 0px, var(--cardboard-dark) 4px,
+      var(--border) 4px, var(--border) 7px,
+      var(--cardboard-dark) 7px, var(--cardboard-dark) 9px,
+      transparent 9px, transparent 14px
+    );
+    opacity: 0.7;
   }
   .header h1 {
-    font-family: var(--font-display);
-    font-size: 2.4rem;
-    color: var(--amber);
-    letter-spacing: -0.02em;
-    line-height: 1;
+    font-family: var(--font-header);
+    font-size: 3rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cardboard-light);
+    line-height: 0.9;
+    filter: url(#distress);
   }
   .header h1 span {
-    font-style: italic;
-    color: var(--cream-dim);
-    font-size: 0.5em;
-    margin-left: 0.8rem;
-    letter-spacing: 0.05em;
+    font-family: var(--font-typed);
+    font-size: 0.23em;
+    color: var(--paper-dim);
+    letter-spacing: 0.02em;
+    display: block;
+    margin-top: 0.4rem;
+    text-transform: none;
+    filter: none;
+    font-weight: 400;
   }
   .header-row {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
     gap: 1rem;
     flex-wrap: wrap;
   }
   .auth-status {
     display: flex;
-    gap: 0.75rem;
+    gap: 0.5rem;
     align-items: center;
     flex-wrap: wrap;
   }
   .badge {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
+    font-family: var(--font-typed);
+    font-size: 0.65rem;
     font-weight: 400;
-    padding: 0.3rem 0.6rem;
-    border-radius: 3px;
-    letter-spacing: 0.03em;
+    padding: 0.2rem 0.45rem;
+    border-radius: 1px;
+    letter-spacing: 0.02em;
+    border: 1px solid transparent;
   }
-  .badge-ok { background: var(--green-dim); color: #c2e6cc; }
-  .badge-off { background: var(--border); color: var(--cream-dim); }
-  .badge-spotify { background: #15823b; color: #b8f0ce; }
+  .badge-ok { background: var(--green-dim); color: #b8d4a8; border-color: #3a5a2a; }
+  .badge-off { background: var(--border); color: var(--paper-dim); }
+  .badge-spotify { background: #15823b; color: #b8f0ce; border-color: #0d6a2f; }
 
   /* ─── Layout ─── */
   .app {
@@ -118,48 +147,50 @@
   .setup-panel {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 2px;
     padding: 1.5rem;
     margin: 1.5rem 0;
   }
   .setup-panel h2 {
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    color: var(--amber);
+    font-family: var(--font-header);
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cardboard-light);
     margin-bottom: 1rem;
   }
   .setup-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
-  @media (max-width: 640px) { .setup-grid { grid-template-columns: 1fr; } }
   .setup-group label {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--cream-dim);
+    font-family: var(--font-typed);
+    font-size: 0.6rem;
+    color: var(--paper-dim);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     display: block;
     margin-bottom: 0.4rem;
   }
   .setup-group input {
     width: 100%;
-    background: var(--bg);
+    background: var(--ink);
     border: 1px solid var(--border);
-    color: var(--cream);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    padding: 0.6rem 0.8rem;
-    border-radius: 4px;
+    color: var(--paper);
+    font-family: var(--font-typed);
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 1px;
     outline: none;
-    transition: border-color 0.2s;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
   }
-  .setup-group input:focus { border-color: var(--amber); }
+  .setup-group input:focus { border-color: var(--cardboard-dark); }
   .setup-group input::placeholder { color: var(--border-light); }
   .setup-group .hint {
-    font-size: 0.7rem;
-    color: var(--cream-dim);
+    font-size: 0.65rem;
+    color: var(--paper-dim);
     margin-top: 0.3rem;
     opacity: 0.7;
   }
@@ -172,51 +203,56 @@
 
   /* ─── Buttons ─── */
   .btn {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 0.55rem 1.1rem;
-    border: 1px solid var(--border-light);
-    border-radius: 4px;
-    background: var(--surface2);
-    color: var(--cream);
+    font-family: var(--font-header);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--cardboard-dark);
+    border-radius: 1px;
+    background: var(--cardboard-dark);
+    color: var(--ink);
     cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.02em;
+    transition: all 0.1s;
+    box-shadow: 2px 2px 0px rgba(0,0,0,0.3);
     white-space: nowrap;
   }
-  .btn:hover { border-color: var(--amber); color: var(--amber); }
-  .btn:disabled { opacity: 0.4; cursor: default; }
-  .btn:disabled:hover { border-color: var(--border-light); color: var(--cream); }
+  .btn:hover { background: var(--cardboard); border-color: var(--cardboard); }
+  .btn:active { box-shadow: none; transform: translate(1px, 1px); }
+  .btn:disabled { opacity: 0.35; cursor: default; }
+  .btn:disabled:hover { background: var(--cardboard-dark); border-color: var(--cardboard-dark); }
   .btn-primary {
-    background: var(--amber-dim);
-    border-color: var(--amber);
-    color: var(--bg);
-    font-weight: 500;
+    background: var(--cardboard-dark);
+    border-color: var(--cardboard);
+    color: var(--ink);
   }
-  .btn-primary:hover { background: var(--amber); }
+  .btn-primary:hover { background: var(--cardboard); }
   .btn-spotify {
     background: #15823b;
-    border-color: var(--spotify-green);
+    border-color: #0d6a2f;
     color: #fff;
   }
-  .btn-spotify:hover { background: var(--spotify-green); }
-  .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.68rem; }
-  .btn-danger { border-color: var(--red); color: var(--red); }
-  .btn-danger:hover { background: var(--red); color: var(--bg); }
+  .btn-spotify:hover { background: var(--spotify-green); border-color: var(--spotify-green); }
+  .btn-sm { font-size: 0.7rem; padding: 0.3rem 0.6rem; box-shadow: 1px 1px 0 rgba(0,0,0,0.3); }
+  .btn-danger { background: transparent; border-color: var(--red); color: var(--red); box-shadow: none; }
+  .btn-danger:hover { background: var(--red); color: var(--ink); }
 
   /* ─── Search Form ─── */
-  .search-section { margin-top: 1.5rem; }
+  .search-section { margin-top: 1.2rem; }
   .search-section h2 {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    color: var(--cream);
-    margin-bottom: 1rem;
+    font-family: var(--font-header);
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--paper-dim);
+    margin-bottom: 0.6rem;
   }
   .search-form {
     display: grid;
     grid-template-columns: 80px 1fr 140px 160px;
-    gap: 0.6rem;
+    gap: 0.5rem;
     align-items: end;
   }
   @media (max-width: 900px) {
@@ -226,100 +262,107 @@
     .search-form { grid-template-columns: 1fr 1fr; }
   }
   .field label {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--cream-dim);
+    font-family: var(--font-typed);
+    font-size: 0.6rem;
+    color: var(--paper-dim);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em;
     display: block;
-    margin-bottom: 0.3rem;
+    margin-bottom: 0.25rem;
   }
   .field input, .field select {
     width: 100%;
-    background: var(--surface);
+    background: var(--ink);
     border: 1px solid var(--border);
-    color: var(--cream);
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    padding: 0.55rem 0.7rem;
-    border-radius: 4px;
+    color: var(--paper);
+    font-family: var(--font-typed);
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 1px;
     outline: none;
     transition: border-color 0.2s;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
   }
-  .field input:focus, .field select:focus { border-color: var(--amber); }
+  .field input:focus, .field select:focus { border-color: var(--cardboard-dark); }
   .field select { cursor: pointer; }
   .field select option { background: var(--surface); }
-  .search-btn-row {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 0.8rem;
-  }
+  .field input::placeholder { color: var(--border-light); }
 
   /* ─── Tabs ─── */
   .tabs {
     display: flex;
     gap: 0;
-    margin-top: 1.5rem;
-    border-bottom: 1px solid var(--border);
+    margin-top: 1.2rem;
+    border-bottom: 2px solid var(--border);
   }
   .tab {
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
+    font-family: var(--font-typed);
+    font-size: 0.7rem;
     font-weight: 400;
-    padding: 0.6rem 1.2rem;
+    padding: 0.5rem 1rem;
     background: none;
     border: none;
-    color: var(--cream-dim);
+    color: var(--paper-dim);
     cursor: pointer;
     border-bottom: 2px solid transparent;
-    transition: all 0.15s;
+    transition: all 0.1s;
+    margin-bottom: -2px;
     letter-spacing: 0.03em;
   }
-  .tab:hover { color: var(--cream); }
-  .tab.active { color: var(--amber); border-bottom-color: var(--amber); }
+  .tab:hover { color: var(--paper); }
+  .tab.active {
+    color: var(--cardboard-light);
+    border-bottom-color: var(--cardboard-dark);
+    background: rgba(168, 137, 74, 0.05);
+  }
   .tab .count {
     background: var(--border);
-    color: var(--cream-dim);
-    font-size: 0.6rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 10px;
-    margin-left: 0.4rem;
+    color: var(--paper-dim);
+    font-size: 0.58rem;
+    padding: 0.08rem 0.35rem;
+    border-radius: 1px;
+    margin-left: 0.3rem;
   }
-  .tab.active .count { background: var(--amber-dim); color: var(--bg); }
+  .tab.active .count { background: var(--cardboard-dark); color: var(--ink); }
 
   /* ─── Results ─── */
-  .results { margin-top: 1rem; }
+  .results { margin-top: 0.5rem; }
   .results-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
   }
   .results-count {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--cream-dim);
+    font-family: var(--font-typed);
+    font-size: 0.65rem;
+    color: var(--paper-dim);
   }
   .release-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 0.9rem 1rem;
-    margin-bottom: 0.5rem;
+    padding: 0.7rem 0.8rem;
+    margin-bottom: 3px;
     display: grid;
-    grid-template-columns: 36px 56px 1fr auto;
-    gap: 0.8rem;
+    grid-template-columns: 28px 48px 1fr auto;
+    gap: 0.6rem;
     align-items: center;
-    transition: border-color 0.15s, background 0.15s;
+    transition: background 0.1s;
     cursor: pointer;
+    position: relative;
   }
-  .release-card:hover { border-color: var(--border-light); background: var(--surface2); }
-  .release-card.selected { border-color: var(--amber-dim); background: #1f1b14; }
+  .release-card:nth-child(even) { background: var(--surface2); }
+  .release-card:hover { background: #342e22; }
+  .release-card.selected {
+    background: #2e2818;
+    border-color: var(--cardboard-dark);
+    border-left: 3px solid var(--cardboard);
+  }
   .release-check {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
     border: 1.5px solid var(--border-light);
-    border-radius: 3px;
+    border-radius: 1px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -327,65 +370,90 @@
     flex-shrink: 0;
   }
   .release-card.selected .release-check {
-    border-color: var(--amber);
-    background: var(--amber);
+    border-color: var(--cardboard);
+    background: var(--cardboard);
   }
   .release-check svg { opacity: 0; transition: opacity 0.15s; }
   .release-card.selected .release-check svg { opacity: 1; }
   .release-thumb {
-    width: 56px;
-    height: 56px;
-    border-radius: 3px;
+    width: 48px;
+    height: 48px;
+    border-radius: 1px;
     background: var(--border);
     object-fit: cover;
     flex-shrink: 0;
+    filter: saturate(0.7) contrast(1.1) brightness(0.95);
+    border: 1px solid rgba(0,0,0,0.3);
   }
   .release-info h3 {
-    font-family: var(--font-body);
-    font-size: 0.88rem;
-    font-weight: 500;
-    color: var(--cream);
-    line-height: 1.3;
+    font-family: var(--font-typed);
+    font-size: 0.82rem;
+    font-weight: 400;
+    color: var(--paper);
+    line-height: 1.25;
   }
   .release-meta {
-    font-family: var(--font-mono);
-    font-size: 0.65rem;
-    color: var(--cream-dim);
-    margin-top: 0.2rem;
+    font-family: var(--font-typed);
+    font-size: 0.6rem;
+    color: var(--paper-dim);
+    margin-top: 0.15rem;
     display: flex;
-    gap: 0.6rem;
+    gap: 0.5rem;
     flex-wrap: wrap;
   }
-  .release-meta span { opacity: 0.7; }
+  .release-meta span { opacity: 0.8; }
   .release-actions {
     display: flex;
-    gap: 0.4rem;
+    gap: 0.25rem;
     flex-shrink: 0;
+    flex-wrap: wrap;
   }
   .match-badge {
-    font-family: var(--font-mono);
-    font-size: 0.6rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: 3px;
+    font-family: var(--font-typed);
+    font-size: 0.58rem;
+    padding: 0.15rem 0.35rem;
+    border-radius: 1px;
     white-space: nowrap;
   }
   .match-spotify { background: #15823b; color: #b8f0ce; }
   .match-youtube { background: #661122; color: #ffaaaa; }
-  .match-none { background: var(--border); color: var(--cream-dim); }
+  .match-none { background: var(--border); color: var(--paper-dim); }
+
+  /* ─── Service links ─── */
+  .spotify-link, .yt-link, .apple-link, .ytmusic-link, .discogs-link {
+    font-family: var(--font-typed);
+    font-size: 0.58rem;
+    text-decoration: none;
+    padding: 0.15rem 0.35rem;
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    transition: all 0.1s;
+    white-space: nowrap;
+  }
+  .spotify-link { color: #4a9a5a; border-color: #2a4a2a; }
+  .spotify-link:hover { background: #15823b; color: #fff; border-color: #15823b; }
+  .apple-link { color: #c06068; border-color: #4a2028; }
+  .apple-link:hover { background: #882838; color: #fff; border-color: #882838; }
+  .ytmusic-link { color: #aa5555; border-color: #4a2222; }
+  .ytmusic-link:hover { background: #882222; color: #fff; border-color: #882222; }
+  .yt-link { color: #aa5555; border-color: #4a2222; }
+  .yt-link:hover { background: #882222; color: #fff; border-color: #882222; }
+  .discogs-link { color: var(--cardboard-dark); border-color: var(--border); }
+  .discogs-link:hover { background: var(--cardboard-dark); color: var(--ink); border-color: var(--cardboard-dark); }
 
   /* ─── Pagination ─── */
   .pagination {
     display: flex;
     justify-content: center;
     gap: 0.5rem;
-    margin-top: 1rem;
-    padding-top: 1rem;
+    margin-top: 0.8rem;
+    padding-top: 0.8rem;
     border-top: 1px solid var(--border);
   }
   .page-info {
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    color: var(--cream-dim);
+    font-family: var(--font-typed);
+    font-size: 0.65rem;
+    color: var(--paper-dim);
     display: flex;
     align-items: center;
   }
@@ -394,14 +462,17 @@
   .playlist-builder {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 2px;
     padding: 1.5rem;
     margin-top: 1rem;
   }
   .playlist-builder h3 {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    color: var(--amber);
+    font-family: var(--font-header);
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--cardboard-light);
     margin-bottom: 1rem;
   }
   .playlist-input-row {
@@ -411,23 +482,24 @@
   }
   .playlist-input-row input {
     flex: 1;
-    background: var(--bg);
+    background: var(--ink);
     border: 1px solid var(--border);
-    color: var(--cream);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
-    padding: 0.6rem 0.8rem;
-    border-radius: 4px;
+    color: var(--paper);
+    font-family: var(--font-typed);
+    font-size: 0.75rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 1px;
     outline: none;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
   }
-  .playlist-input-row input:focus { border-color: var(--amber); }
+  .playlist-input-row input:focus { border-color: var(--cardboard-dark); }
   .unmatched-section { margin-top: 1.5rem; }
   .unmatched-section h4 {
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    color: var(--cream-dim);
+    font-family: var(--font-typed);
+    font-size: 0.7rem;
+    color: var(--paper-dim);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     margin-bottom: 0.6rem;
   }
   .unmatched-item {
@@ -436,68 +508,8 @@
     align-items: center;
     padding: 0.5rem 0;
     border-bottom: 1px solid var(--border);
-    font-size: 0.82rem;
+    font-size: 0.78rem;
   }
-  .yt-link {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--youtube-red);
-    text-decoration: none;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid #661122;
-    border-radius: 3px;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .yt-link:hover { background: #661122; color: #fff; }
-  .spotify-link {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--spotify-green);
-    text-decoration: none;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid #15823b;
-    border-radius: 3px;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .spotify-link:hover { background: #15823b; color: #fff; }
-  .apple-link {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: #fc3c44;
-    text-decoration: none;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid #5a1520;
-    border-radius: 3px;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .apple-link:hover { background: #5a1520; color: #fff; }
-  .ytmusic-link {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: #ff0000;
-    text-decoration: none;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid #551111;
-    border-radius: 3px;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .ytmusic-link:hover { background: #551111; color: #fff; }
-  .discogs-link {
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    color: var(--amber-dim);
-    text-decoration: none;
-    padding: 0.25rem 0.5rem;
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .discogs-link:hover { background: var(--amber-dim); color: var(--bg); }
 
   /* ─── Loading ─── */
   .spinner {
@@ -505,7 +517,7 @@
     width: 14px;
     height: 14px;
     border: 2px solid var(--border);
-    border-top-color: var(--amber);
+    border-top-color: var(--cardboard);
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
     margin-right: 0.5rem;
@@ -516,14 +528,14 @@
   .loading-bar {
     height: 3px;
     background: var(--border);
-    border-radius: 2px;
+    border-radius: 1px;
     overflow: hidden;
     margin: 1rem 0;
   }
   .loading-bar-fill {
     height: 100%;
-    background: var(--amber);
-    border-radius: 2px;
+    background: var(--cardboard);
+    border-radius: 1px;
     transition: width 0.3s;
   }
 
@@ -531,9 +543,9 @@
   .empty {
     text-align: center;
     padding: 3rem 1rem;
-    color: var(--cream-dim);
-    font-family: var(--font-mono);
-    font-size: 0.8rem;
+    color: var(--paper-dim);
+    font-family: var(--font-scrawl);
+    font-size: 0.85rem;
   }
   .empty-icon { font-size: 2rem; margin-bottom: 0.5rem; display: block; }
 
@@ -541,15 +553,15 @@
   .success-panel {
     background: #14291c;
     border: 1px solid var(--green-dim);
-    border-radius: 6px;
+    border-radius: 2px;
     padding: 1.25rem;
     margin-top: 1rem;
     text-align: center;
   }
   .success-panel a {
     color: var(--spotify-green);
-    font-family: var(--font-mono);
-    font-size: 0.85rem;
+    font-family: var(--font-typed);
+    font-size: 0.8rem;
   }
 
   /* ─── Error ─── */
@@ -557,10 +569,10 @@
     background: #2a1515;
     border: 1px solid #5a2a2a;
     color: #e8a0a0;
-    font-family: var(--font-mono);
-    font-size: 0.75rem;
-    padding: 0.6rem 0.9rem;
-    border-radius: 4px;
+    font-family: var(--font-typed);
+    font-size: 0.7rem;
+    padding: 0.5rem 0.8rem;
+    border-radius: 1px;
     margin-top: 0.5rem;
   }
 
@@ -570,32 +582,44 @@
     justify-content: space-between;
     align-items: center;
     padding: 0.5rem 0;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.3rem;
   }
 
   /* ─── Animations ─── */
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(4px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .fade-in { animation: fadeIn 0.25s ease-out forwards; }
+  .fade-in { animation: fadeIn 0.2s ease-out forwards; }
 
   /* ─── Toggle ─── */
   .toggle-link {
     background: none;
     border: none;
-    color: var(--amber-dim);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
+    color: var(--paper-dim);
+    font-family: var(--font-typed);
+    font-size: 0.65rem;
     cursor: pointer;
     text-decoration: underline;
     text-underline-offset: 2px;
+    text-decoration-color: var(--border-light);
   }
-  .toggle-link:hover { color: var(--amber); }
+  .toggle-link:hover { color: var(--paper); }
+
+  /* ─── SVG filter container ─── */
+  .svg-filters { position: absolute; width: 0; height: 0; overflow: hidden; }
 </style>
 </head>
 <body>
 
+<svg class="svg-filters" aria-hidden="true">
+  <defs>
+    <filter id="distress">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise" seed="2"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
 <div class="app" id="app"></div>
 
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -1187,7 +1211,7 @@ function App() {
 
       {/* ═══ SEARCH ═══ */}
       <div className="search-section">
-        <h2>Search Discogs</h2>
+        <h2>Search</h2>
         <div className="search-form">
           <div className="field">
             <label>Year</label>
@@ -1243,7 +1267,7 @@ function App() {
               disabled={loading}
               style={{width:'100%'}}
             >
-              {loading ? <><span className="spinner"></span>Searching…</> : "Search"}
+              {loading ? <><span className="spinner"></span>Searching…</> : "Dig"}
             </button>
           </div>
         </div>
@@ -1272,7 +1296,7 @@ function App() {
                 {allOnPageSelected ? "Deselect page" : "Select all on page"}
               </button>
               {selectedList.length > 0 && (
-                <span style={{fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'var(--amber)'}}>
+                <span style={{fontFamily:'var(--font-mono)',fontSize:'0.7rem',color:'var(--cardboard-light)'}}>
                   {selectedList.length} selected total
                 </span>
               )}
@@ -1297,7 +1321,7 @@ function App() {
                   <div className="release-thumb" style={{display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',color:'var(--border-light)'}}>♫</div>
                 )}
                 <div className="release-info">
-                  <h3>{artist ? <><span style={{color:'var(--amber)'}}>{artist}</span> — {title}</> : r.title}</h3>
+                  <h3>{artist ? <><span style={{color:'var(--cardboard-light)',fontWeight:700}}>{artist}</span> — {title}</> : r.title}</h3>
                   <div className="release-meta">
                     {r.year && <span>{r.year}</span>}
                     {r.country && <span>{r.country}</span>}
@@ -1383,7 +1407,7 @@ function App() {
                       <div className="release-thumb" style={{display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem',color:'var(--border-light)'}}>♫</div>
                     )}
                     <div className="release-info">
-                      <h3>{artist ? <><span style={{color:'var(--amber)'}}>{artist}</span> — {title}</> : release.title}</h3>
+                      <h3>{artist ? <><span style={{color:'var(--cardboard-light)',fontWeight:700}}>{artist}</span> — {title}</> : release.title}</h3>
                       <div className="release-meta">
                         {release.year && <span>{release.year}</span>}
                         {release.country && <span>{release.country}</span>}
