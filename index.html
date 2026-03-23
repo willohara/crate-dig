@@ -1803,6 +1803,8 @@ function App() {
                               <span className="track-pos">{t.position}</span>
                               <span className="track-title meta-click" onClick={(e) => { e.stopPropagation(); searchByTrack(t.title); }}>{t.title}</span>
                               {t.duration && <span className="track-dur">{t.duration}</span>}
+                              <a className="yt-link" href={ytSearchUrl(artist, t.title)} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{fontSize:'0.55rem',padding:'0.1rem 0.25rem',marginLeft:'0.3rem'}}>▶ YT</a>
+                              <a className="spotify-link" href="#" onClick={(e) => { e.stopPropagation(); openSpotifySearch(artist, t.title, e); }} style={{fontSize:'0.55rem',padding:'0.1rem 0.25rem'}}>♫</a>
                             </div>
                           )) : <div style={{color:'var(--paper-dim)',fontSize:'0.65rem'}}>No tracklist available</div>}
                         </div>
