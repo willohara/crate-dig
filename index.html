@@ -606,6 +606,72 @@
   }
   .toggle-link:hover { color: var(--paper); }
 
+
+  /* ─── Clickable metadata ─── */
+  .meta-click {
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dashed;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--border-light);
+    transition: color 0.1s;
+  }
+  .meta-click:hover {
+    color: var(--cardboard-light);
+    text-decoration-color: var(--cardboard-dark);
+  }
+
+  /* ─── Filter banner ─── */
+  .filter-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    padding: 0.5rem 0.7rem;
+    margin-top: 0.6rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    font-family: var(--font-typed);
+    font-size: 0.65rem;
+  }
+  .filter-banner-label {
+    color: var(--paper-dim);
+    margin-right: 0.2rem;
+  }
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: var(--cardboard-dark);
+    color: var(--ink);
+    font-family: var(--font-typed);
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 1px;
+    white-space: nowrap;
+  }
+  .filter-chip-x {
+    cursor: pointer;
+    opacity: 0.7;
+    font-size: 0.75rem;
+    line-height: 1;
+    transition: opacity 0.1s;
+  }
+  .filter-chip-x:hover { opacity: 1; }
+  .filter-clear {
+    margin-left: auto;
+    color: var(--red);
+    cursor: pointer;
+    font-family: var(--font-typed);
+    font-size: 0.6rem;
+    background: none;
+    border: none;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .filter-clear:hover { color: #e05040; }
+
   /* ─── SVG filter container ─── */
   .svg-filters { position: absolute; width: 0; height: 0; overflow: hidden; }
 </style>
@@ -837,6 +903,7 @@ function App() {
   const [label, setLabel] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [filterTrigger, setFilterTrigger] = useState(0);
   const [results, setResults] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -930,7 +997,57 @@ function App() {
   };
 
   // ─── Discogs Search ───
-  const searchDiscogs = async (p = 1) => {
+  // ─── Auto-search on filter click ───
+  React.useEffect(() => {
+    if (filterTrigger > 0) searchDiscogs(1);
+  }, [filterTrigger]);
+
+  // ─── Clickable filter helpers ───
+  const applyFilter = (field, value) => {
+    if (field === 'genre') { setGenre(value); setStyle(""); }
+    else if (field === 'style') { setStyle(value); }
+    else if (field === 'label') { setLabel(value); }
+    else if (field === 'country') { setCountry(value); }
+    setFilterTrigger(f => f + 1);
+  };
+
+  const removeFilter = (field) => {
+    if (field === 'year') setYear("");
+    else if (field === 'genre') { setGenre(""); setStyle(""); }
+    else if (field === 'style') setStyle("");
+    else if (field === 'label') setLabel("");
+    else if (field === 'country') setCountry("");
+    setFilterTrigger(f => f + 1);
+  };
+
+  const clearAllFilters = () => {
+    setYear("");
+    setGenre("");
+    setStyle("");
+    setLabel("");
+    setCountry("");
+    setQuery("");
+    setSortBy("");
+    setSortOrder("desc");
+    setResults([]);
+    setPagination(null);
+    setTab("results");
+  };
+
+  // Build active filters list for banner
+  const activeFilters = [];
+  if (year) activeFilters.push({ field: 'year', value: year });
+  if (genre) activeFilters.push({ field: 'genre', value: genre });
+  if (style) activeFilters.push({ field: 'style', value: style });
+  if (label) activeFilters.push({ field: 'label', value: label });
+  if (country) activeFilters.push({ field: 'country', value: country });
+
+  // Build description string
+  const filterDesc = activeFilters.length > 0
+    ? activeFilters.map(f => f.value).join(' · ')
+    : '';
+
+    const searchDiscogs = async (p = 1) => {
     setLoading(true);
     setError("");
     setPage(p);
@@ -1322,10 +1439,11 @@ function App() {
                   <h3>{artist ? <><span style={{color:'var(--cardboard-light)',fontWeight:700}}>{artist}</span> — {title}</> : r.title}</h3>
                   <div className="release-meta">
                     {r.year && <span>{r.year}</span>}
-                    {r.country && <span>{r.country}</span>}
+                    {r.country && <span className="meta-click" onClick={e => { e.stopPropagation(); applyFilter('country', r.country); }}>{r.country}</span>}
                     {r.format && <span>{r.format.join(", ")}</span>}
-                    {r.genre && <span>{r.genre.join(", ")}</span>}
-                    {r.label && <span>{r.label[0]}</span>}
+                    {r.genre && r.genre.map(g => <span key={g} className="meta-click" onClick={e => { e.stopPropagation(); applyFilter('genre', g); }}>{g}</span>)}
+                    {r.style && r.style.map(s => <span key={s} className="meta-click" onClick={e => { e.stopPropagation(); applyFilter('style', s); }}>{s}</span>)}
+                    {r.label && <span className="meta-click" onClick={e => { e.stopPropagation(); applyFilter('label', r.label[0]); }}>{r.label[0]}</span>}
                   </div>
                 </div>
                 <div className="release-actions" onClick={e => e.stopPropagation()}>
