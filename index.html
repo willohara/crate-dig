@@ -900,7 +900,7 @@ function App() {
   const [showSetup, setShowSetup] = useState(false);
 
   // Search
-  const [year, setYear] = useState("1972");
+  const [year, setYear] = useState("");
   const [genre, setGenre] = useState("");
   const [style, setStyle] = useState("");
   const [query, setQuery] = useState("");
@@ -912,6 +912,7 @@ function App() {
   const [results, setResults] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
 
@@ -1036,7 +1037,8 @@ function App() {
     setSortOrder("desc");
     setResults([]);
     setPagination(null);
-    setTab("search");
+    setHasSearched(false);
+    setTab("results");
   };
 
   // Build active filters list for banner
@@ -1054,6 +1056,7 @@ function App() {
 
     const searchDiscogs = async (p = 1) => {
     setLoading(true);
+    setHasSearched(true);
     setError("");
     setPage(p);
     try {
@@ -1408,7 +1411,7 @@ function App() {
       </div>
 
       {/* ═══ FILTER BANNER ═══ */}
-      {activeFilters.length > 0 && (
+      {hasSearched && activeFilters.length > 0 && (
         <div className="filter-banner">
           <span className="filter-banner-label">Showing:</span>
           {activeFilters.map(f => (
