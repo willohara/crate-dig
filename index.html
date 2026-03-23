@@ -1615,8 +1615,8 @@ function App() {
             const isSelected = !!selected[r.id];
             const match = spotifyMatches[r.id];
             return (
+              <React.Fragment key={r.id}>
               <div
-                key={r.id}
                 className={`release-card ${isSelected ? 'selected' : ''}`}
                 onClick={() => expandCard(r)}
                 style={{ animationDelay: `${i * 30}ms` }}
@@ -1686,6 +1686,7 @@ function App() {
                   })() : null}
                 </div>
               )}
+              </React.Fragment>
             );
           })}
 
