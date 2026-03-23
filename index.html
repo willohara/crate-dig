@@ -627,13 +627,18 @@
     align-items: center;
     gap: 0.4rem;
     flex-wrap: wrap;
-    padding: 0.5rem 0.7rem;
+    padding: 0.6rem 0.8rem;
     margin-top: 0.6rem;
-    background: var(--surface);
-    border: 1px solid var(--border);
+    margin-bottom: 0.4rem;
+    background: var(--surface2);
+    border: 1px solid var(--cardboard-dark);
+    border-left: 3px solid var(--cardboard);
     border-radius: 1px;
     font-family: var(--font-typed);
-    font-size: 0.65rem;
+    font-size: 0.68rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
   .filter-banner-label {
     color: var(--paper-dim);
@@ -1031,7 +1036,7 @@ function App() {
     setSortOrder("desc");
     setResults([]);
     setPagination(null);
-    setTab("results");
+    setTab("search");
   };
 
   // Build active filters list for banner
@@ -1401,6 +1406,20 @@ function App() {
           Build Playlist
         </button>
       </div>
+
+      {/* ═══ FILTER BANNER ═══ */}
+      {activeFilters.length > 0 && (
+        <div className="filter-banner">
+          <span className="filter-banner-label">Showing:</span>
+          {activeFilters.map(f => (
+            <span key={f.field} className="filter-chip">
+              {f.value}
+              <span className="filter-chip-x" onClick={() => removeFilter(f.field)}>×</span>
+            </span>
+          ))}
+          <button className="filter-clear" onClick={clearAllFilters}>clear all</button>
+        </div>
+      )}
 
       {/* ═══ SEARCH RESULTS TAB ═══ */}
       {tab === 'search' && (
