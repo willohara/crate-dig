@@ -1136,7 +1136,8 @@ function App() {
   };
 
   const removeFilter = (field) => {
-    if (field === 'year') setYear("");
+    if (field === 'query') setQuery("");
+    else if (field === 'year') setYear("");
     else if (field === 'genre') { setGenre(""); setStyle(""); }
     else if (field === 'style') setStyle("");
     else if (field === 'label') setLabel("");
@@ -1163,6 +1164,7 @@ function App() {
 
   // Build active filters list for banner
   const activeFilters = [];
+  if (query) activeFilters.push({ field: 'query', value: query });
   if (year) activeFilters.push({ field: 'year', value: year });
   if (genre) activeFilters.push({ field: 'genre', value: genre });
   if (style) activeFilters.push({ field: 'style', value: style });
@@ -1228,11 +1230,16 @@ function App() {
   const searchByArtist = (artistName) => {
     // Strip Discogs disambiguation numbers
     const clean = artistName.replace(/\s*\(\d+\)\s*$/, "");
-    setCredit(clean);
-    setQuery("");
+    // Clear everything and search just by credit
+    setYear("");
+    setGenre("");
+    setStyle("");
     setLabel("");
     setCountry("");
-    setStyle("");
+    setQuery("");
+    setSortBy("");
+    setSortOrder("desc");
+    setCredit(clean);
     setFilterTrigger(f => f + 1);
   };
 
@@ -1602,6 +1609,10 @@ function App() {
           <div className="field">
             <label>Label</label>
             <input value={label} onChange={e => setLabel(e.target.value)} placeholder="Domino, Warp, Blue Note…" />
+          </div>
+          <div className="field">
+            <label>Credited musician</label>
+            <input value={credit} onChange={e => setCredit(e.target.value)} placeholder="Damon Albarn, Jah Wobble…" />
           </div>
           <div className="field">
             <label>Sort by</label>
