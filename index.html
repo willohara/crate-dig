@@ -1019,8 +1019,10 @@ function App() {
   const [query, setQuery] = useState("");
   const [country, setCountry] = useState("");
   const [label, setLabel] = useState("");
+  const [credit, setCredit] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [includeOrphans, setIncludeOrphans] = useState(true);
   const [filterTrigger, setFilterTrigger] = useState(0);
   const [results, setResults] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -1139,6 +1141,7 @@ function App() {
     else if (field === 'style') setStyle("");
     else if (field === 'label') setLabel("");
     else if (field === 'country') setCountry("");
+    else if (field === 'credit') setCredit("");
     setFilterTrigger(f => f + 1);
   };
 
@@ -1148,6 +1151,7 @@ function App() {
     setStyle("");
     setLabel("");
     setCountry("");
+    setCredit("");
     setQuery("");
     setSortBy("");
     setSortOrder("desc");
@@ -1164,6 +1168,7 @@ function App() {
   if (style) activeFilters.push({ field: 'style', value: style });
   if (label) activeFilters.push({ field: 'label', value: label });
   if (country) activeFilters.push({ field: 'country', value: country });
+  if (credit) activeFilters.push({ field: 'credit', value: credit });
 
   // Build description string
   const filterDesc = activeFilters.length > 0
@@ -1172,43 +1177,49 @@ function App() {
 
   // ─── Expand card to show tracklist & credits ───
   const expandCard = async (r) => {
-    const masterId = r.master_id || r.id;
-    if (expandedId === masterId) {
+    const cardId = r.master_id || r.id;
+    if (expandedId === cardId) {
       setExpandedId(null);
       return;
     }
-    setExpandedId(masterId);
+    setExpandedId(cardId);
 
-    if (detailCache[masterId]) return;
+    if (detailCache[cardId]) return;
 
     setDetailLoading(true);
     try {
-      // Fetch master to get main_release ID and tracklist
-      const masterRes = await fetch(`${DISCOGS_API}/masters/${masterId}`);
-      if (!masterRes.ok) throw new Error("Failed to fetch master");
-      const masterData = await masterRes.json();
-
-      // Fetch the main release for full credits
-      const mainReleaseId = masterData.main_release;
       let releaseData = null;
-      if (mainReleaseId) {
-        const releaseRes = await fetch(`${DISCOGS_API}/releases/${mainReleaseId}`);
-        if (releaseRes.ok) {
-          releaseData = await releaseRes.json();
+      let masterData = null;
+
+      if (r.master_id) {
+        // Has a master — fetch master then main release
+        const masterRes = await fetch(`${DISCOGS_API}/masters/${r.master_id}`);
+        if (masterRes.ok) {
+          masterData = await masterRes.json();
+          const mainReleaseId = masterData.main_release;
+          if (mainReleaseId) {
+            const releaseRes = await fetch(`${DISCOGS_API}/releases/${mainReleaseId}`);
+            if (releaseRes.ok) releaseData = await releaseRes.json();
+          }
         }
+      } else {
+        // Orphaned release — fetch release directly
+        const releaseRes = await fetch(`${DISCOGS_API}/releases/${r.id}`);
+        if (releaseRes.ok) releaseData = await releaseRes.json();
       }
 
+      const source = releaseData || masterData || {};
       const detail = {
-        tracklist: (releaseData || masterData).tracklist || [],
+        tracklist: source.tracklist || [],
         extraartists: (releaseData || {}).extraartists || [],
-        artists: masterData.artists || [],
+        artists: source.artists || [],
         notes: (releaseData || {}).notes || "",
-        videos: masterData.videos || [],
+        videos: source.videos || [],
       };
 
-      setDetailCache(prev => ({ ...prev, [masterId]: detail }));
+      setDetailCache(prev => ({ ...prev, [cardId]: detail }));
     } catch (e) {
-      setDetailCache(prev => ({ ...prev, [masterId]: { tracklist: [], extraartists: [], artists: [], notes: "", videos: [], error: e.message } }));
+      setDetailCache(prev => ({ ...prev, [cardId]: { tracklist: [], extraartists: [], artists: [], notes: "", videos: [], error: e.message } }));
     }
     setDetailLoading(false);
   };
@@ -1217,7 +1228,8 @@ function App() {
   const searchByArtist = (artistName) => {
     // Strip Discogs disambiguation numbers
     const clean = artistName.replace(/\s*\(\d+\)\s*$/, "");
-    setQuery(clean);
+    setCredit(clean);
+    setQuery("");
     setLabel("");
     setCountry("");
     setStyle("");
@@ -1230,8 +1242,12 @@ function App() {
     setError("");
     setPage(p);
     try {
+      // Determine search type based on whether credit is used
+      const useCredit = !!credit;
+
+      // Primary search: masters (or releases if credit search)
       const url = new URL(DISCOGS_API);
-      url.searchParams.set("type", "master");
+      url.searchParams.set("type", useCredit ? "release" : "master");
       url.searchParams.set("per_page", "20");
       url.searchParams.set("page", String(p));
       if (year) url.searchParams.set("year", year);
@@ -1240,6 +1256,7 @@ function App() {
       if (query) url.searchParams.set("q", query);
       if (country) url.searchParams.set("country", country);
       if (label) url.searchParams.set("label", label);
+      if (credit) url.searchParams.set("credit", credit);
       if (sortBy) {
         url.searchParams.set("sort", sortBy);
         url.searchParams.set("sort_order", sortOrder);
@@ -1251,7 +1268,57 @@ function App() {
         throw new Error(`Discogs API error (${res.status}): ${txt.slice(0, 200)}`);
       }
       const data = await res.json();
-      setResults(data.results || []);
+      let mainResults = data.results || [];
+
+      // If credit search returned releases, deduplicate by master_id
+      if (useCredit && mainResults.length > 0) {
+        const seen = new Set();
+        mainResults = mainResults.filter(r => {
+          if (r.master_id) {
+            if (seen.has(r.master_id)) return false;
+            seen.add(r.master_id);
+          }
+          return true;
+        });
+      }
+
+      // If includeOrphans is on AND we're NOT doing a credit search AND on page 1,
+      // do a secondary search for releases without masters
+      let orphanResults = [];
+      if (includeOrphans && !useCredit && p === 1) {
+        try {
+          const oUrl = new URL(DISCOGS_API);
+          oUrl.searchParams.set("type", "release");
+          oUrl.searchParams.set("per_page", "10");
+          oUrl.searchParams.set("page", "1");
+          if (year) oUrl.searchParams.set("year", year);
+          if (genre) oUrl.searchParams.set("genre", genre);
+          if (style) oUrl.searchParams.set("style", style);
+          if (query) oUrl.searchParams.set("q", query);
+          if (country) oUrl.searchParams.set("country", country);
+          if (label) oUrl.searchParams.set("label", label);
+          if (sortBy) {
+            oUrl.searchParams.set("sort", sortBy);
+            oUrl.searchParams.set("sort_order", sortOrder);
+          }
+          const oRes = await fetch(oUrl.toString());
+          if (oRes.ok) {
+            const oData = await oRes.json();
+            const oReleases = oData.results || [];
+            // Keep only releases that have NO master_id (orphans)
+            orphanResults = oReleases.filter(r => !r.master_id);
+          }
+        } catch (e) { /* silently fail orphan search */ }
+      }
+
+      // Merge: main results first, then orphans (marked)
+      const finalResults = [...mainResults];
+      if (orphanResults.length > 0) {
+        orphanResults.forEach(r => { r._orphan = true; });
+        finalResults.push(...orphanResults);
+      }
+
+      setResults(finalResults);
       setPagination(data.pagination || null);
     } catch (e) {
       setError(e.message);
@@ -1553,6 +1620,12 @@ function App() {
               </select>
             </div>
           )}
+          <div className="field" style={{display:'flex',alignItems:'flex-end',gap:'0.3rem'}}>
+            <label style={{display:'flex',alignItems:'center',gap:'0.3rem',cursor:'pointer',fontSize:'0.6rem',whiteSpace:'nowrap'}}>
+              <input type="checkbox" checked={includeOrphans} onChange={e => setIncludeOrphans(e.target.checked)} style={{accentColor:'var(--cardboard)'}} />
+              Include rare releases
+            </label>
+          </div>
           <div className="field" style={{display:'flex',alignItems:'flex-end'}}>
             <button
               className="btn btn-primary"
@@ -1631,6 +1704,7 @@ function App() {
                   <h3>{artist ? <><span style={{color:'var(--cardboard-light)',fontWeight:700}}>{artist}</span> — {title}</> : r.title}</h3>
                   <div className="release-meta">
                     {r.year && <span>{r.year}</span>}
+                    {r._orphan && <span style={{color:'var(--cardboard-dark)',fontSize:'0.55rem',fontStyle:'italic'}}>release only</span>}
                     {r.country && <span className="meta-click" onClick={e => { e.stopPropagation(); applyFilter('country', r.country); }}>{r.country}</span>}
                     {r.format && <span>{r.format.join(", ")}</span>}
                     {r.genre && r.genre.map(g => <span key={g} className="meta-click" onClick={e => { e.stopPropagation(); applyFilter('genre', g); }}>{g}</span>)}
