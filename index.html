@@ -429,7 +429,7 @@
   .match-none { background: var(--border); color: var(--paper-dim); }
 
   /* ─── Service links ─── */
-  .spotify-link, .yt-link, .apple-link, .ytmusic-link, .discogs-link {
+  .spotify-link, .yt-link, .apple-link, .ytmusic-link, .bandcamp-link, .discogs-link {
     font-family: var(--font-typed);
     font-size: 0.58rem;
     text-decoration: none;
@@ -447,6 +447,8 @@
   .ytmusic-link:hover { background: #882222; color: #fff; border-color: #882222; }
   .yt-link { color: #aa5555; border-color: #4a2222; }
   .yt-link:hover { background: #882222; color: #fff; border-color: #882222; }
+  .bandcamp-link { color: #629aa9; border-color: #2a3a4a; }
+  .bandcamp-link:hover { background: #1da0c3; color: #fff; border-color: #1da0c3; }
   .discogs-link { color: var(--cardboard-dark); border-color: var(--border); }
   .discogs-link:hover { background: var(--cardboard-dark); color: var(--ink); border-color: var(--cardboard-dark); }
 
@@ -963,31 +965,68 @@ function isSelfTitled(artist, title) {
   return artist.trim().toLowerCase() === title.trim().toLowerCase();
 }
 
-// Build a base search string with year + self-titled hint
-function buildSearchQuery(artist, title, year) {
+// Formats that are generic enough to add noise rather than signal
+const GENERIC_FORMATS = new Set([
+  "vinyl", "lp", "album", "compilation", "reissue", "remastered",
+  "stereo", "mono", "limited edition", "deluxe edition", "gatefold",
+  "cd", "digital", "file", "mp3", "flac", "wav", "aac"
+]);
+
+// Extract a search-useful format hint from the Discogs format array
+// Returns e.g. '7"', '10"', 'cassette', 'EP', 'flexi-disc', or null
+function getDistinctiveFormat(formatArr) {
+  if (!formatArr || !formatArr.length) return null;
+  for (const f of formatArr) {
+    const lower = f.trim().toLowerCase();
+    if (GENERIC_FORMATS.has(lower)) continue;
+    // These are the formats that actually help disambiguate in search
+    if (/^7"/.test(f) || /^10"/.test(f) || /^12"/.test(f)) return f.trim();
+    if (lower === "cassette") return "cassette";
+    if (lower === "ep") return "EP";
+    if (lower === "single") return "single";
+    if (lower === "mini-album" || lower === "minialbum") return "mini-album";
+    if (lower === "flexi-disc") return "flexi-disc";
+    if (lower === "shellac") return "shellac";
+    if (lower === "78 rpm") return "78 rpm";
+    if (lower === "8-track cartridge") return "8-track";
+    if (lower === "reel-to-reel") return "reel-to-reel";
+    if (lower === "minidisc") return "minidisc";
+    if (lower === "laserdisc") return "laserdisc";
+    if (lower === "vhs") return "VHS";
+    if (lower === "betamax") return "betamax";
+  }
+  return null;
+}
+
+// Build a base search string with year + self-titled hint + distinctive format
+function buildSearchQuery(artist, title, year, format) {
   let parts = [artist, title].filter(Boolean);
   if (year) parts.push(String(year));
   if (isSelfTitled(artist, title)) parts.push("album");
+  const fmt = getDistinctiveFormat(format);
+  if (fmt) parts.push(fmt);
   return parts.join(" ").trim();
 }
 
 // YouTube gets "full album" appended — matches how obscure albums are typically uploaded
-function buildYtAlbumQuery(artist, title, year) {
+function buildYtAlbumQuery(artist, title, year, format) {
   let parts = [artist, title].filter(Boolean);
   if (year) parts.push(String(year));
   parts.push("full album");
+  const fmt = getDistinctiveFormat(format);
+  if (fmt) parts.push(fmt);
   return parts.join(" ").trim();
 }
 
-// Track-level: artist + track title + year (no "album" hint)
+// Track-level: artist + track title + year (no "album" or format hint)
 function buildTrackQuery(artist, trackTitle, year) {
   let parts = [artist, trackTitle].filter(Boolean);
   if (year) parts.push(String(year));
   return parts.join(" ").trim();
 }
 
-function ytSearchUrl(artist, title, year) {
-  const q = encodeURIComponent(buildYtAlbumQuery(artist, title, year));
+function ytSearchUrl(artist, title, year, format) {
+  const q = encodeURIComponent(buildYtAlbumQuery(artist, title, year, format));
   return `https://www.youtube.com/results?search_query=${q}`;
 }
 
@@ -996,18 +1035,18 @@ function ytTrackSearchUrl(artist, trackTitle, year) {
   return `https://www.youtube.com/results?search_query=${q}`;
 }
 
-function spotifySearchUrl(artist, title, year) {
-  const q = encodeURIComponent(buildSearchQuery(artist, title, year));
+function spotifySearchUrl(artist, title, year, format) {
+  const q = encodeURIComponent(buildSearchQuery(artist, title, year, format));
   return `spotify:search:${q}`;
 }
-function spotifyWebSearchUrl(artist, title, year) {
-  const q = encodeURIComponent(buildSearchQuery(artist, title, year));
+function spotifyWebSearchUrl(artist, title, year, format) {
+  const q = encodeURIComponent(buildSearchQuery(artist, title, year, format));
   return `https://open.spotify.com/search/${q}`;
 }
 
-function openSpotifySearch(artist, title, year, e) {
+function openSpotifySearch(artist, title, year, format, e) {
   if (e) e.preventDefault();
-  const q = encodeURIComponent(buildSearchQuery(artist, title, year));
+  const q = encodeURIComponent(buildSearchQuery(artist, title, year, format));
   const appUri = `spotify:search:${q}`;
   const webUrl = `https://open.spotify.com/search/${q}`;
   const start = Date.now();
@@ -1023,14 +1062,19 @@ function openSpotifySearch(artist, title, year, e) {
   }, 800);
 }
 
-function appleMusicSearchUrl(artist, title, year) {
-  const q = encodeURIComponent(buildSearchQuery(artist, title, year));
+function appleMusicSearchUrl(artist, title, year, format) {
+  const q = encodeURIComponent(buildSearchQuery(artist, title, year, format));
   return `https://music.apple.com/us/search?term=${q}`;
 }
 
-function ytMusicSearchUrl(artist, title, year) {
-  const q = encodeURIComponent(buildSearchQuery(artist, title, year));
+function ytMusicSearchUrl(artist, title, year, format) {
+  const q = encodeURIComponent(buildSearchQuery(artist, title, year, format));
   return `https://music.youtube.com/search?q=${q}`;
+}
+
+function bandcampSearchUrl(artist, title, year, format) {
+  const q = encodeURIComponent(buildSearchQuery(artist, title, year, format));
+  return `https://bandcamp.com/search?q=${q}`;
 }
 
 function discogsUrl(uri) {
@@ -1813,10 +1857,11 @@ function App() {
                   </div>
                 </div>
                 <div className="release-actions" onClick={e => e.stopPropagation()}>
-                  <a className="spotify-link" href="#" onClick={(e) => openSpotifySearch(artist, title, r.year, e)} title="Opens app if installed, otherwise web player">♫ Spotify ↗</a>
-                  <a className="apple-link" href={appleMusicSearchUrl(artist, title, r.year)} target="_blank" rel="noopener">♫ Apple Music ↗</a>
-                  <a className="ytmusic-link" href={ytMusicSearchUrl(artist, title, r.year)} target="_blank" rel="noopener">♬ YT Music ↗</a>
-                  <a className="yt-link" href={ytSearchUrl(artist, title, r.year)} target="_blank" rel="noopener">▶ YouTube ↗</a>
+                  <a className="spotify-link" href="#" onClick={(e) => openSpotifySearch(artist, title, r.year, r.format, e)} title="Opens app if installed, otherwise web player">♫ Spotify ↗</a>
+                  <a className="apple-link" href={appleMusicSearchUrl(artist, title, r.year, r.format)} target="_blank" rel="noopener">♫ Apple Music ↗</a>
+                  <a className="ytmusic-link" href={ytMusicSearchUrl(artist, title, r.year, r.format)} target="_blank" rel="noopener">♬ YT Music ↗</a>
+                  <a className="yt-link" href={ytSearchUrl(artist, title, r.year, r.format)} target="_blank" rel="noopener">▶ YouTube ↗</a>
+                  <a className="bandcamp-link" href={bandcampSearchUrl(artist, title, r.year, r.format)} target="_blank" rel="noopener">Bandcamp ↗</a>
                   {r.uri && (
                     <a className="discogs-link" href={discogsUrl(r.uri)} target="_blank" rel="noopener">Discogs ↗</a>
                   )}
@@ -1839,7 +1884,7 @@ function App() {
                               <span className="track-title meta-click" onClick={(e) => { e.stopPropagation(); searchByTrack(t.title); }}>{t.title}</span>
                               {t.duration && <span className="track-dur">{t.duration}</span>}
                               <a className="yt-link" href={ytTrackSearchUrl(artist, t.title, r.year)} target="_blank" rel="noopener" onClick={e => e.stopPropagation()} style={{fontSize:'0.55rem',padding:'0.1rem 0.25rem',marginLeft:'0.3rem'}}>▶ YT</a>
-                              <a className="spotify-link" href="#" onClick={(e) => { e.stopPropagation(); openSpotifySearch(artist, t.title, r.year, e); }} style={{fontSize:'0.55rem',padding:'0.1rem 0.25rem'}}>♫</a>
+                              <a className="spotify-link" href="#" onClick={(e) => { e.stopPropagation(); openSpotifySearch(artist, t.title, r.year, null, e); }} style={{fontSize:'0.55rem',padding:'0.1rem 0.25rem'}}>♫</a>
                             </div>
                           )) : <div style={{color:'var(--paper-dim)',fontSize:'0.65rem'}}>No tracklist available</div>}
                         </div>
@@ -1945,7 +1990,7 @@ function App() {
                           ♫ {match.artist} — {match.name} ↗
                         </a>
                       ) : (
-                        <a className="yt-link" href={ytSearchUrl(artist, title, release.year)} target="_blank" rel="noopener">
+                        <a className="yt-link" href={ytSearchUrl(artist, title, release.year, release.format)} target="_blank" rel="noopener">
                           YouTube search ↗
                         </a>
                       )}
@@ -2014,10 +2059,11 @@ function App() {
                       <div key={id} className="unmatched-item">
                         <span>{artist ? <><strong style={{color:'var(--cream)'}}>{artist}</strong> — {title}</> : release.title}</span>
                         <div style={{display:'flex',gap:'0.4rem',flexWrap:'wrap'}}>
-                          <a className="spotify-link" href="#" onClick={(e) => openSpotifySearch(artist, title, release.year, e)} title="Opens app if installed, otherwise web player">♫ Spotify ↗</a>
-                          <a className="apple-link" href={appleMusicSearchUrl(artist, title, release.year)} target="_blank" rel="noopener">Apple Music ↗</a>
-                          <a className="ytmusic-link" href={ytMusicSearchUrl(artist, title, release.year)} target="_blank" rel="noopener">YT Music ↗</a>
-                          <a className="yt-link" href={ytSearchUrl(artist, title, release.year)} target="_blank" rel="noopener">YouTube ↗</a>
+                          <a className="spotify-link" href="#" onClick={(e) => openSpotifySearch(artist, title, release.year, release.format, e)} title="Opens app if installed, otherwise web player">♫ Spotify ↗</a>
+                          <a className="apple-link" href={appleMusicSearchUrl(artist, title, release.year, release.format)} target="_blank" rel="noopener">Apple Music ↗</a>
+                          <a className="ytmusic-link" href={ytMusicSearchUrl(artist, title, release.year, release.format)} target="_blank" rel="noopener">YT Music ↗</a>
+                          <a className="yt-link" href={ytSearchUrl(artist, title, release.year, release.format)} target="_blank" rel="noopener">YouTube ↗</a>
+                          <a className="bandcamp-link" href={bandcampSearchUrl(artist, title, release.year, release.format)} target="_blank" rel="noopener">Bandcamp ↗</a>
                           {release.uri && <a className="discogs-link" href={discogsUrl(release.uri)} target="_blank" rel="noopener">Discogs ↗</a>}
                         </div>
                       </div>
