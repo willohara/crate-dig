@@ -801,6 +801,30 @@
   }
   .expand-arrow.open { transform: rotate(90deg); }
 
+
+  /* ─── Nav bar ─── */
+  .nav { display:flex; gap:0; padding:0 2rem; background:var(--surface); border-bottom:1px solid var(--border); }
+  .nav-link { font-family:var(--font-typed); font-size:0.68rem; font-weight:400; color:var(--paper-dim); text-decoration:none; padding:0.55rem 0.9rem; border:none; border-bottom:2px solid transparent; transition:all 0.15s; letter-spacing:0.03em; cursor:pointer; background:none; }
+  .nav-link:hover { color:var(--paper); background:rgba(168,137,74,0.04); }
+  .nav-link.active { color:var(--cardboard-light); border-bottom-color:var(--cardboard-dark); background:rgba(168,137,74,0.06); }
+  .page-content { max-width:700px; margin:0 auto; padding:2rem 1.5rem 4rem; }
+  .page-content h2 { font-family:var(--font-header); font-size:1.6rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--cardboard-light); margin-bottom:1.5rem; filter:url(#distress); }
+  .page-content h3 { font-family:var(--font-header); font-size:1rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--cardboard); margin-top:2rem; margin-bottom:0.6rem; }
+  .page-content p { font-family:var(--font-typed); font-size:0.82rem; line-height:1.7; color:var(--paper); margin-bottom:1rem; }
+  .page-content .dim { color:var(--paper-dim); }
+  .page-content a { color:var(--cardboard-light); text-decoration:underline; text-decoration-style:dashed; text-underline-offset:3px; text-decoration-color:var(--cardboard-dark); transition:color 0.15s; }
+  .page-content a:hover { color:var(--cardboard); }
+  .step-block { background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--cardboard-dark); padding:1rem 1.2rem; margin-bottom:0.8rem; border-radius:1px; }
+  .step-num { font-family:var(--font-header); font-size:0.7rem; font-weight:600; text-transform:uppercase; letter-spacing:0.1em; color:var(--cardboard-dark); margin-bottom:0.3rem; }
+  .step-block p { margin-bottom:0.4rem; }
+  .step-block p:last-child { margin-bottom:0; }
+  .tip-block { background:rgba(74,106,58,0.15); border:1px solid var(--green-dim); padding:0.8rem 1rem; margin:1rem 0; border-radius:1px; font-family:var(--font-typed); font-size:0.75rem; color:#b8d4a8; line-height:1.6; }
+  .tip-block strong { color:#d0e8c0; font-weight:700; }
+  .field-grid { display:grid; grid-template-columns:auto 1fr; gap:0.3rem 1rem; margin:0.8rem 0; font-family:var(--font-typed); font-size:0.75rem; }
+  .field-grid .key { color:var(--cardboard-light); font-weight:700; white-space:nowrap; }
+  .field-grid .desc { color:var(--paper-dim); }
+  .about-placeholder { border:2px dashed var(--border-light); padding:2rem; text-align:center; color:var(--paper-dim); font-family:var(--font-scrawl); font-size:0.9rem; margin:2rem 0; border-radius:2px; }
+
   /* ─── SVG filter container ─── */
   .svg-filters { position: absolute; width: 0; height: 0; overflow: hidden; }
 </style>
@@ -1095,6 +1119,12 @@ function CheckIcon() {
    MAIN APP
    ═══════════════════════════════════════════════════════════════ */
 function App() {
+  // ─── Page routing ───
+  const getPage = () => { const h = window.location.hash; if (h === '#/how-it-works') return 'how-it-works'; if (h === '#/about') return 'about'; return 'app'; };
+  const [currentPage, setCurrentPage] = useState(getPage);
+  useEffect(() => { const fn = () => setCurrentPage(getPage()); window.addEventListener('hashchange', fn); return () => window.removeEventListener('hashchange', fn); }, []);
+  const navTo = (pg) => { if (pg === 'app') { history.pushState(null, '', window.location.pathname); setCurrentPage('app'); } else { window.location.hash = '#/' + pg; } };
+
   // ─── State ─── 
   const [spotifyToken, setSpotifyToken] = useState(null);
   const [spotifyUser, setSpotifyUser] = useState(null);
@@ -1675,7 +1705,7 @@ function App() {
       {/* ═══ HEADER ═══ */}
       <div className="header">
         <div className="header-row">
-          <h1>Crate Digger <span>discogs → spotify</span></h1>
+          <h1 style={{cursor:'pointer'}} onClick={() => navTo('app')}>Crate Digger <span>discogs → spotify</span></h1>
           <div className="auth-status">
             <span className="badge badge-ok">DISCOGS ✓</span>
             {spotifyUser ? (
@@ -1691,6 +1721,94 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* ═══ NAV ═══ */}
+      <nav className="nav">
+        <button className={`nav-link ${currentPage === 'app' ? 'active' : ''}`} onClick={() => navTo('app')}>Dig</button>
+        <button className={`nav-link ${currentPage === 'how-it-works' ? 'active' : ''}`} onClick={() => navTo('how-it-works')}>How It Works</button>
+        <button className={`nav-link ${currentPage === 'about' ? 'active' : ''}`} onClick={() => navTo('about')}>About</button>
+      </nav>
+
+      {/* ═══ PAGE: HOW IT WORKS ═══ */}
+      {currentPage === 'how-it-works' && (
+        <div className="page-content fade-in">
+          <h2>How It Works</h2>
+          <p>Crate Digger lets you search the Discogs database — the closest thing the internet has to a complete catalog of every record ever pressed — and turn what you find into Spotify playlists. It’s built for the kind of browsing that algorithms can’t replicate: wandering through a year, a genre, a label, and seeing what’s there.</p>
+
+          <h3>The Basics</h3>
+
+          <div className="step-block">
+            <div className="step-num">Step 1 — Connect Spotify</div>
+            <p>Click <strong style={{color:'var(--spotify-green)'}}>Connect Spotify</strong> in the header. This uses OAuth, so your password never touches this site. You get redirected to Spotify, approve access, and bounce back.</p>
+            <p className="dim">Spotify connection is optional — you can browse Discogs and use the YouTube / Apple Music / Bandcamp links without it. You just need it for playlist creation.</p>
+          </div>
+
+          <div className="step-block">
+            <div className="step-num">Step 2 — Search</div>
+            <p>The search bar is where it gets interesting. You can combine any of these:</p>
+            <div className="field-grid">
+              <span className="key">Year</span><span className="desc">A single year. Try 1972, or 1986, or 2003.</span>
+              <span className="key">Genre</span><span className="desc">Top-level Discogs genres — Rock, Jazz, Electronic, Latin, etc.</span>
+              <span className="key">Style</span><span className="desc">Populates when you pick a genre. This is where it gets specific: Krautrock, Bossa Nova, Dungeon Synth, Bayou Funk.</span>
+              <span className="key">Label</span><span className="desc">Search by record label. Try “Blue Note” or “Warp” or “Fania”.</span>
+              <span className="key">Country</span><span className="desc">Country of release. “US”, “UK”, “Japan”, “Brazil”.</span>
+              <span className="key">Credited musician</span><span className="desc">Find everything a specific musician played on — not just their own records.</span>
+              <span className="key">Track title</span><span className="desc">Search for a specific song name across all releases.</span>
+              <span className="key">Search</span><span className="desc">Free-text search across everything.</span>
+            </div>
+            <p>Hit <strong style={{color:'var(--cardboard-light)'}}>Dig</strong> to search. Results come 20 at a time with pagination.</p>
+          </div>
+
+          <div className="step-block">
+            <div className="step-num">Step 3 — Browse & Select</div>
+            <p>Click any result to expand it — you’ll see the full tracklist and credits. Every individual track has YouTube and Spotify search links so you can listen before committing.</p>
+            <p>Click the checkbox to select releases for your playlist. Selections persist as you page through results.</p>
+          </div>
+
+          <div className="step-block">
+            <div className="step-num">Step 4 — Match & Build</div>
+            <p>Go to the <strong style={{color:'var(--cardboard-light)'}}>Selected</strong> tab and hit <strong style={{color:'var(--spotify-green)'}}>Match to Spotify</strong>. Crate Digger searches Spotify for each album and shows what it found and what it didn’t.</p>
+            <p>Then go to <strong style={{color:'var(--cardboard-light)'}}>Build Playlist</strong>. Name it, click create, and all matched tracks land in a new playlist in your Spotify account. Anything not on Spotify gets fallback links to YouTube, Apple Music, YouTube Music, and Bandcamp.</p>
+          </div>
+
+          <h3>Shortcuts & Tricks</h3>
+
+          <div className="tip-block">
+            <strong>Clickable metadata:</strong> In search results, genre tags, style tags, labels, and country names are all clickable — they re-run your search filtered to that value. Same for credited musicians in the expanded view. This is how you fall down rabbit holes.
+          </div>
+
+          <div className="tip-block">
+            <strong>The credit field is powerful.</strong> Search for a session musician or producer instead of a band name. You’ll find records you’d never encounter otherwise — the connective tissue between scenes.
+          </div>
+
+          <div className="tip-block">
+            <strong>“Release only” results:</strong> Some records don’t have a “master release” in Discogs — one-off pressings, white labels, obscurities that never got consolidated. These show up tagged “release only” and tend to be where the most interesting finds live.
+          </div>
+
+          <h3>What This Is Not</h3>
+          <p>Crate Digger does not recommend anything. There’s no “you might also like.” You pick the year, the genre, the label. You decide what to listen to based on what you find. The tool just makes Discogs navigable and connects it to your streaming services.</p>
+
+          <p style={{marginTop:'2rem'}}>
+            <button className="btn btn-primary" onClick={() => navTo('app')}>Start Digging →</button>
+          </p>
+        </div>
+      )}
+
+      {/* ═══ PAGE: ABOUT ═══ */}
+      {currentPage === 'about' && (
+        <div className="page-content fade-in">
+          <h2>About</h2>
+          <div className="about-placeholder">
+            Copy goes here.
+          </div>
+          <p style={{textAlign:'center',marginTop:'2rem'}}>
+            <a href="https://thecside.substack.com" target="_blank" rel="noopener">The C-Side on Substack ↗</a>
+          </p>
+        </div>
+      )}
+
+      {/* ═══ MAIN APP ═══ */}
+      {currentPage === 'app' && (<>
 
       {/* ═══ SETUP ═══ */}
       {showSetup && (
@@ -2075,6 +2193,7 @@ function App() {
           )}
         </div>
       )}
+    </>)}
     </div>
   );
 }
