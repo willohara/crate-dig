@@ -851,7 +851,7 @@ const { useState, useEffect, useCallback, useRef } = React;
    CONFIG — Update these or enter them in the UI
    ═══════════════════════════════════════════════════════════════ */
 const SPOTIFY_CLIENT_ID = "2ab0a937c9404edc89d76ce1e81d735d";
-const REDIRECT_URI = "https://dig.thebside.blog/";
+const REDIRECT_URI = "https://willohara.github.io/crate-digger/";
 const DISCOGS_API = "https://crate-digger.willohara21.workers.dev";
 const SPOTIFY_API = "https://api.spotify.com/v1";
 const SPOTIFY_AUTH = "https://accounts.spotify.com/authorize";
@@ -1151,6 +1151,7 @@ function App() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
+  const [artistIdSearch, setArtistIdSearch] = useState(null); // {id, name} when browsing by artist ID
 
   // Selection + matching
   const [selected, setSelected] = useState({});  // id -> release object
@@ -1250,6 +1251,12 @@ function App() {
     else if (field === 'style') { setStyle(value); }
     else if (field === 'label') { setLabel(value); }
     else if (field === 'country') { setCountry(value); }
+    // If we're in an artist ID search, convert to a text credit search
+    // since the artist releases endpoint doesn't support genre/style/etc filters
+    if (artistIdSearch) {
+      setCredit(artistIdSearch.name);
+      setArtistIdSearch(null);
+    }
     setFilterTrigger(f => f + 1);
   };
 
@@ -1262,13 +1269,15 @@ function App() {
     setStyle("");
     setYear("");
     setGenre("");
+    setArtistIdSearch(null);
     setSortBy("");
     setSortOrder("desc");
     setFilterTrigger(f => f + 1);
   };
 
   const removeFilter = (field) => {
-    if (field === 'query') setQuery("");
+    if (field === 'artistId') setArtistIdSearch(null);
+    else if (field === 'query') setQuery("");
     else if (field === 'year') setYear("");
     else if (field === 'genre') { setGenre(""); setStyle(""); }
     else if (field === 'style') setStyle("");
@@ -1297,6 +1306,7 @@ function App() {
     setCredit("");
     setTrack("");
     setQuery("");
+    setArtistIdSearch(null);
     setSortBy("");
     setSortOrder("desc");
     setResults([]);
@@ -1307,6 +1317,7 @@ function App() {
 
   // Build active filters list for banner
   const activeFilters = [];
+  if (artistIdSearch) activeFilters.push({ field: 'artistId', value: artistIdSearch.name });
   if (query) activeFilters.push({ field: 'query', value: query });
   if (year) activeFilters.push({ field: 'year', value: year });
   if (genre) activeFilters.push({ field: 'genre', value: genre });
@@ -1371,20 +1382,33 @@ function App() {
   };
 
   // ─── Search by artist (from credits click) ───
-  const searchByArtist = (artistName) => {
-    // Strip Discogs disambiguation numbers
+  const searchByArtist = (artistName, artistId) => {
+    // Strip Discogs disambiguation numbers for display
     const clean = artistName.replace(/\s*\(\d+\)\s*$/, "");
-    // Clear everything and search just by credit
+    // Clear all filters and collapse any open card
     setYear("");
     setGenre("");
     setStyle("");
     setLabel("");
     setCountry("");
     setQuery("");
+    setTrack("");
     setSortBy("");
     setSortOrder("desc");
-    setCredit(clean);
-    setFilterTrigger(f => f + 1);
+    setExpandedId(null);
+    setTab("search");
+
+    if (artistId) {
+      // Use precise artist ID endpoint
+      setCredit("");
+      setArtistIdSearch({ id: artistId, name: clean });
+      setFilterTrigger(f => f + 1);
+    } else {
+      // Fallback to text-based credit search
+      setArtistIdSearch(null);
+      setCredit(clean);
+      setFilterTrigger(f => f + 1);
+    }
   };
 
       const searchDiscogs = async (p = 1) => {
@@ -1393,6 +1417,57 @@ function App() {
     setError("");
     setPage(p);
     try {
+      // ─── Artist ID search: use /artists/{id}/releases endpoint ───
+      if (artistIdSearch) {
+        const url = new URL(`${DISCOGS_API}/artists/${artistIdSearch.id}/releases`);
+        url.searchParams.set("per_page", "20");
+        url.searchParams.set("page", String(p));
+        if (sortBy) {
+          url.searchParams.set("sort", sortBy);
+          url.searchParams.set("sort_order", sortOrder);
+        }
+
+        const res = await fetch(url.toString());
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`Discogs API error (${res.status}): ${txt.slice(0, 200)}`);
+        }
+        const data = await res.json();
+        let releases = data.releases || [];
+
+        // Normalize to match the shape searchDiscogs results expect
+        // Artist releases endpoint returns {id, title, year, thumb, role, type, ...}
+        // We need to make these look like search results
+        releases = releases.map(r => ({
+          id: r.id,
+          master_id: r.type === 'master' ? r.id : (r.master_id || null),
+          title: r.artist ? `${r.artist} - ${r.title}` : r.title,
+          year: r.year || "",
+          thumb: r.thumb || "",
+          country: r.country || "",
+          format: r.format ? (Array.isArray(r.format) ? r.format : [r.format]) : [],
+          uri: r.resource_url ? r.resource_url.replace('https://api.discogs.com', 'https://www.discogs.com') : "",
+          _artistRole: r.role || "",
+          type: r.type || "release",
+        }));
+
+        // Deduplicate by master_id (keep first occurrence)
+        const seen = new Set();
+        releases = releases.filter(r => {
+          if (r.master_id) {
+            if (seen.has(r.master_id)) return false;
+            seen.add(r.master_id);
+          }
+          return true;
+        });
+
+        setResults(releases);
+        setPagination(data.pagination || null);
+        setLoading(false);
+        return;
+      }
+
+      // ─── Standard search path ───
       // Determine search type based on whether credit is used
       const useCredit = !!credit;
 
@@ -1800,7 +1875,7 @@ function App() {
           <p>Crate Digger is essentially a music search engine that makes it easier to discover interesting, eclectic music that you wouldn't otherwise stumble across — visit <a href="#" onClick={(e) => { e.preventDefault(); navTo('how-it-works'); }}>"How It Works"</a> to get a feel for it.</p>
           <p>I built this site because I want more people to discover music on their own terms, rather than having it fed to them by an incessant machine that typifies you and slowly shapes your preferences until you are listening to the same exact thing everyone else in your demographic likes.</p>
           <p>The Internet as we currently interact with it is like a museum — the recommendation layer does the excavation work and decides what is worth listening to and what should stay in the ground. But there's nothing stopping us from becoming archaeologists and digging up whatever we please. Until now there has never been a way to easily comb through the musical archives like you would at a record store. This site does not do recommendations, and it will not show you artists that are similar to your search results. The point of Crate Digger is for you to take control of discovery, so that music can surprise you again.</p>
-          <p>Crate Digger grew out of <a href="https://www.thebside.blog" target="_blank" rel="noopener">The B-Side</a>, my larger project of making the dark and dusty corners of the Internet more accessible to culture hounds. We have been told that record stores, video stores, rare bookshops, and the like will be consigned to obscurity and irrelevance in the digital age. But there is no actual reason why this should be the case — in fact it is easier than ever to find crazy shit, because you have access to the entire world, and the millions of other people who are also trying to find crazy shit. Eventually I will build out other corresponding sites for video, literature, and other things. But for now it's just Crate Digger. Enjoy, and keep digging.</p>
+          <p>Crate Digger grew out of <a href="https://thecside.substack.com" target="_blank" rel="noopener">The C-Side</a>, my larger project of making the dark and dusty corners of the Internet more accessible to culture hounds. We have been told that record stores, video stores, rare bookshops, and the like will be consigned to obscurity and irrelevance in the digital age. But there is no actual reason why this should be the case — in fact it is easier than ever to find crazy shit, because you have access to the entire world, and the millions of other people who are also trying to find crazy shit. Eventually I will build out other corresponding sites for video, literature, and other things. But for now it's just Crate Digger. Enjoy, and keep digging.</p>
         </div>
       )}
 
@@ -1888,7 +1963,7 @@ function App() {
           <div className="field" style={{display:'flex',alignItems:'flex-end'}}>
             <button
               className="btn btn-primary"
-              onClick={() => searchDiscogs(1)}
+              onClick={() => { setArtistIdSearch(null); searchDiscogs(1); }}
               disabled={loading}
               style={{width:'100%'}}
             >
@@ -1964,6 +2039,7 @@ function App() {
                   <div className="release-meta">
                     {r.year && <span>{r.year}</span>}
                     {r._orphan && <span style={{color:'var(--cardboard-dark)',fontSize:'0.55rem',fontStyle:'italic'}}>release only</span>}
+                    {r._artistRole && <span style={{color:'var(--cardboard)',fontSize:'0.55rem',fontStyle:'italic'}}>{r._artistRole}</span>}
                     {r.country && <span className="meta-click" onClick={e => { e.stopPropagation(); applyFilter('country', r.country); }}>{r.country}</span>}
                     {r.format && <span>{r.format.join(", ")}</span>}
                     {r.genre && r.genre.map(g => <span key={g} className="meta-click" onClick={e => { e.stopPropagation(); applyFilter('genre', g); }}>{g}</span>)}
@@ -2007,12 +2083,12 @@ function App() {
                           <div className="credits-header">Credits</div>
                           {d.extraartists.length > 0 ? d.extraartists.map((ea, ei) => (
                             <div key={ei} className="credit-row">
-                              <span className="credit-name" onClick={(e) => { e.stopPropagation(); searchByArtist(ea.name); }}>{ea.name.replace(/\s*\(\d+\)\s*$/, "")}</span>
+                              <span className="credit-name" onClick={(e) => { e.stopPropagation(); searchByArtist(ea.name, ea.id); }}>{ea.name.replace(/\s*\(\d+\)\s*$/, "")}</span>
                               <span className="credit-role">{ea.role}</span>
                             </div>
                           )) : d.artists.length > 0 ? d.artists.map((a, ai) => (
                             <div key={ai} className="credit-row">
-                              <span className="credit-name" onClick={(e) => { e.stopPropagation(); searchByArtist(a.name); }}>{a.name.replace(/\s*\(\d+\)\s*$/, "")}</span>
+                              <span className="credit-name" onClick={(e) => { e.stopPropagation(); searchByArtist(a.name, a.id); }}>{a.name.replace(/\s*\(\d+\)\s*$/, "")}</span>
                               <span className="credit-role">Primary artist</span>
                             </div>
                           )) : <div style={{color:'var(--paper-dim)',fontSize:'0.65rem'}}>No credits available</div>}
