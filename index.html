@@ -1518,12 +1518,13 @@ function App() {
       let masterData = null;
 
       if (r.master_id) {
-        // Has a master — fetch master then main release
+        // Has a master — fetch master then main release (staggered)
         const masterRes = await fetch(`${DISCOGS_API}/masters/${r.master_id}`);
         if (masterRes.ok) {
           masterData = await masterRes.json();
           const mainReleaseId = masterData.main_release;
           if (mainReleaseId) {
+            await delay(150); // stagger to avoid Discogs rate limit
             const releaseRes = await fetch(`${DISCOGS_API}/releases/${mainReleaseId}`);
             if (releaseRes.ok) releaseData = await releaseRes.json();
           }
@@ -1787,6 +1788,20 @@ function App() {
     setError("");
     setPage(p);
     try {
+      // Helper: fetch with retry on transient errors (429, 5xx)
+      const fetchRetry = async (fetchUrl, retries = 2) => {
+        for (let attempt = 0; attempt <= retries; attempt++) {
+          const res = await fetch(fetchUrl);
+          if (res.status === 429 || (res.status >= 500 && res.status < 600)) {
+            if (attempt < retries) {
+              await delay(300 * (attempt + 1)); // 300ms, 600ms backoff
+              continue;
+            }
+          }
+          return res;
+        }
+      };
+
       // ─── Artist ID search: use /artists/{id}/releases endpoint ───
       if (artistIdSearch) {
         const url = new URL(`${DISCOGS_API}/artists/${artistIdSearch.id}/releases`);
@@ -1797,7 +1812,7 @@ function App() {
           url.searchParams.set("sort_order", sortOrder);
         }
 
-        const res = await fetch(url.toString());
+        const res = await fetchRetry(url.toString());
         if (!res.ok) {
           const txt = await res.text();
           throw new Error(`Discogs API error (${res.status}): ${txt.slice(0, 200)}`);
@@ -1862,7 +1877,7 @@ function App() {
         url.searchParams.set("sort_order", sortOrder);
       }
 
-      const res = await fetch(url.toString());
+      const res = await fetchRetry(url.toString());
       if (!res.ok) {
         const txt = await res.text();
         throw new Error(`Discogs API error (${res.status}): ${txt.slice(0, 200)}`);
@@ -1872,6 +1887,7 @@ function App() {
 
       // If credit search returned 0 results, try as artist name search instead
       if (useCredit && mainResults.length === 0) {
+        await delay(150); // stagger before fallback request
         const fallbackUrl = new URL(DISCOGS_API);
         fallbackUrl.searchParams.set("type", "master");
         fallbackUrl.searchParams.set("per_page", "20");
@@ -1888,7 +1904,7 @@ function App() {
           fallbackUrl.searchParams.set("sort", sortBy);
           fallbackUrl.searchParams.set("sort_order", sortOrder);
         }
-        const fallbackRes = await fetch(fallbackUrl.toString());
+        const fallbackRes = await fetchRetry(fallbackUrl.toString());
         if (fallbackRes.ok) {
           const fallbackData = await fallbackRes.json();
           mainResults = fallbackData.results || [];
@@ -1911,10 +1927,11 @@ function App() {
       }
 
       // If includeOrphans is on AND we're NOT doing a credit search AND on page 1,
-      // do a secondary search for releases without masters
+      // do a secondary search for releases without masters (chained after main, not concurrent)
       let orphanResults = [];
       if (includeOrphans && !useCredit && p === 1) {
         try {
+          await delay(150); // stagger after main search completes
           const oUrl = new URL(DISCOGS_API);
           oUrl.searchParams.set("type", "release");
           oUrl.searchParams.set("per_page", "10");
@@ -1932,7 +1949,7 @@ function App() {
             oUrl.searchParams.set("sort", sortBy);
             oUrl.searchParams.set("sort_order", sortOrder);
           }
-          const oRes = await fetch(oUrl.toString());
+          const oRes = await fetchRetry(oUrl.toString());
           if (oRes.ok) {
             const oData = await oRes.json();
             const oReleases = oData.results || [];
