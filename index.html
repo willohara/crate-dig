@@ -2157,15 +2157,76 @@ function App() {
       setPagination(data.pagination || null);
 
       // ─── Parallel Bandcamp search (non-blocking, appends results) ───
+      // Uses field-aware search: artist box → artist→discography pipeline,
+      // release title → album search, track → track search, etc.
+      // Skips if only Discogs-specific fields are used (year, genre, style, country, label, catno).
       if (p === 1) {
-        const bcQuery = [artistSearch, releaseTitle, credit, query].filter(Boolean).join(" ").trim();
-        if (bcQuery) {
+        const hasArtist = !!(artistSearch || credit);
+        const hasTitle = !!releaseTitle;
+        const hasTrack = !!track;
+        const hasGeneral = !!query;
+        const hasBcSearchable = hasArtist || hasTitle || hasTrack || hasGeneral;
+
+        if (hasBcSearchable) {
           (async () => {
             try {
-              const bcRes = await fetch(`${DISCOGS_API}/bandcamp/search?q=${encodeURIComponent(bcQuery)}&type=album`);
-              if (!bcRes.ok) return;
-              const bcData = await bcRes.json();
-              const bcItems = bcData.items || [];
+              let bcItems = [];
+
+              if (hasArtist && !hasTitle && !hasTrack && !hasGeneral) {
+                // ─── Artist-only search: find artist → fetch discography ───
+                const artistQ = (artistSearch || credit).trim();
+                const artistRes = await fetch(`${DISCOGS_API}/bandcamp/search?q=${encodeURIComponent(artistQ)}&type=artist`);
+                if (artistRes.ok) {
+                  const artistData = await artistRes.json();
+                  const artists = artistData.items || [];
+                  // Find best artist match
+                  const normalize = (s) => (s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+                  const targetNorm = normalize(artistQ);
+                  const bestArtist = artists.find(a => normalize(a.name) === targetNorm) || artists[0];
+                  if (bestArtist && bestArtist.url) {
+                    const discoRes = await fetch(`${DISCOGS_API}/bandcamp/discography?url=${encodeURIComponent(bestArtist.url)}`);
+                    if (discoRes.ok) {
+                      const discography = await discoRes.json();
+                      bcItems = (discography || []).filter(d => d.type === "album").map(d => ({
+                        type: "album",
+                        name: d.name,
+                        url: d.url,
+                        imageUrl: d.imageUrl || "",
+                        artist: bestArtist.name,
+                        numTracks: d.numTracks || null,
+                        releaseDate: d.releaseDate || "",
+                        tags: "",
+                      }));
+                    }
+                  }
+                }
+              } else if (hasTrack && !hasTitle && !hasGeneral) {
+                // ─── Track search ───
+                const trackQ = [artistSearch, credit, track].filter(Boolean).join(" ").trim();
+                const trackRes = await fetch(`${DISCOGS_API}/bandcamp/search?q=${encodeURIComponent(trackQ)}&type=track`);
+                if (trackRes.ok) {
+                  const trackData = await trackRes.json();
+                  // Convert track results to album-like shape
+                  bcItems = (trackData.items || []).map(t => ({
+                    type: "album",
+                    name: t.album || t.name,
+                    url: t.url || "",
+                    imageUrl: t.imageUrl || "",
+                    artist: t.artist || "",
+                    releaseDate: t.releaseDate || "",
+                    tags: t.tags || "",
+                  }));
+                }
+              } else {
+                // ─── Combined / general search: search albums with best query ───
+                const bcQuery = [artistSearch, releaseTitle, credit, query].filter(Boolean).join(" ").trim();
+                const bcRes = await fetch(`${DISCOGS_API}/bandcamp/search?q=${encodeURIComponent(bcQuery)}&type=album`);
+                if (bcRes.ok) {
+                  const bcData = await bcRes.json();
+                  bcItems = bcData.items || [];
+                }
+              }
+
               if (bcItems.length === 0) return;
 
               // Build a set of Discogs titles for dedup (lowercase, stripped)
